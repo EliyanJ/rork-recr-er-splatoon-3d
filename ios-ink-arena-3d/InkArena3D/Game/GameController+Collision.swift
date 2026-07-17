@@ -96,7 +96,32 @@ extension GameController {
 
     /// Same test as `obstacleHit`, but also returns which obstacle matched so
     /// callers can paint/clamp against that specific surface's own bounds.
+    /// Uses the spatial broadphase (single-cell lookup) in a normal match and
+    /// falls back to the full linear scan in training or for out-of-grid
+    /// points — the precise per-obstacle test is identical either way.
     func obstacleIndexHit(_ position: SIMD3<Float>, projectileTeam: Team? = nil) -> Int? {
+        if isTraining { return legacyObstacleIndexHit(position, projectileTeam: projectileTeam) }
+        guard let candidates = obstacleGrid?.obstacleCandidates(x: position.x, z: position.z) else {
+            return legacyObstacleIndexHit(position, projectileTeam: projectileTeam)
+        }
+        for i in candidates {
+            let index = Int(i)
+            let obstacle = obstacles[index]
+            if let pass = obstacle.passThroughTeam, pass == projectileTeam { continue }
+            if abs(position.x - obstacle.center.x) < obstacle.halfX + 0.1,
+               abs(position.z - obstacle.center.z) < obstacle.halfZ + 0.1,
+               position.y > obstacle.baseY,
+               position.y < obstacle.topY {
+                return index
+            }
+        }
+        return nil
+    }
+
+    /// Legacy full linear scan over every obstacle — identical test, used as
+    /// the safe fallback when the spatial grid is unavailable (training,
+    /// out-of-grid points).
+    private func legacyObstacleIndexHit(_ position: SIMD3<Float>, projectileTeam: Team? = nil) -> Int? {
         for index in obstacles.indices {
             let obstacle = obstacles[index]
             if let pass = obstacle.passThroughTeam, pass == projectileTeam { continue }
@@ -224,18 +249,42 @@ extension GameController {
         return ramp.lowY + t * (ramp.highY - ramp.lowY)
     }
 
+    /// Runs `body` for every WALKABLE obstacle that could cover (x, z): the
+    /// spatial grid's single-cell candidates in a normal match, or the full
+    /// `walkableObstacles` list as a safe fallback (training, no grid, or an
+    /// out-of-grid point). Callers still apply their own precise test.
+    private func forEachWalkableCandidate(atX x: Float, z: Float, _ body: (Obstacle) -> Void) {
+        if !isTraining, let candidates = obstacleGrid?.obstacleCandidates(x: x, z: z) {
+            for i in candidates {
+                let obstacle = obstacles[Int(i)]
+                if obstacle.isWalkable { body(obstacle) }
+            }
+        } else {
+            for obstacle in walkableObstacles { body(obstacle) }
+        }
+    }
+
+    /// Ramp equivalent of `forEachWalkableCandidate`.
+    private func forEachRampCandidate(atX x: Float, z: Float, _ body: (Ramp) -> Void) {
+        if !isTraining, let candidates = obstacleGrid?.rampCandidates(x: x, z: z) {
+            for i in candidates { body(ramps[Int(i)]) }
+        } else {
+            for ramp in ramps { body(ramp) }
+        }
+    }
+
     /// Height a character standing at (x, z) can occupy, limited to ledges
     /// reachable from its current height.
     func walkableHeight(atX x: Float, z: Float, currentY: Float) -> Float {
         var best: Float = 0
-        for obstacle in walkableObstacles {
+        forEachWalkableCandidate(atX: x, z: z) { obstacle in
             if obstacle.topY <= currentY + GameConfig.stepUpHeight,
                abs(x - obstacle.center.x) <= obstacle.halfX + 0.2,
                abs(z - obstacle.center.z) <= obstacle.halfZ + 0.2 {
                 best = max(best, obstacle.topY)
             }
         }
-        for ramp in ramps {
+        forEachRampCandidate(atX: x, z: z) { ramp in
             if let height = rampHeight(ramp, x: x, z: z), height <= currentY + GameConfig.stepUpHeight {
                 best = max(best, height)
             }
@@ -250,8 +299,9 @@ extension GameController {
     func paintSurface(atX x: Float, z: Float) -> SurfaceClip? {
         var best: Float = 0
         var result: SurfaceClip? = nil
-        for obstacle in walkableObstacles
-        where abs(x - obstacle.center.x) <= obstacle.halfX && abs(z - obstacle.center.z) <= obstacle.halfZ {
+        forEachWalkableCandidate(atX: x, z: z) { obstacle in
+            guard abs(x - obstacle.center.x) <= obstacle.halfX,
+                  abs(z - obstacle.center.z) <= obstacle.halfZ else { return }
             if obstacle.topY > best {
                 best = obstacle.topY
                 // Crate/platform top: a dead-flat horizontal plane, clipped to
@@ -282,13 +332,13 @@ extension GameController {
     /// projectile landing / physics (NOT paintability; ramps stay unpainted).
     func paintSurfaceHeight(atX x: Float, z: Float) -> Float {
         var best: Float = 0
-        for obstacle in walkableObstacles {
+        forEachWalkableCandidate(atX: x, z: z) { obstacle in
             if abs(x - obstacle.center.x) <= obstacle.halfX,
                abs(z - obstacle.center.z) <= obstacle.halfZ {
                 best = max(best, obstacle.topY)
             }
         }
-        for ramp in ramps {
+        forEachRampCandidate(atX: x, z: z) { ramp in
             if let height = rampHeight(ramp, x: x, z: z) {
                 best = max(best, height)
             }

@@ -614,6 +614,10 @@ final class GameController {
     /// Walkable subset of `obstacles`, precomputed so the per-frame height
     /// queries never scan the full blocker list.
     var walkableObstacles: [Obstacle] = []
+    /// Uniform XZ broadphase grid over `obstacles` / `ramps`, rebuilt on every
+    /// mutation. nil in training (obstacles move each frame) — queries then
+    /// fall back to their legacy linear scans.
+    @ObservationIgnored var obstacleGrid: ObstacleGrid?
     var ramps: [Ramp] = []
     var waterZones: [WaterZone] = []
     var ziplines: [Zipline] = []

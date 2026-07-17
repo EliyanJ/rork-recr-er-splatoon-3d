@@ -110,6 +110,8 @@ extension GameController {
             // straight through its own shield.
             passThroughTeam: team
         ))
+        // Runtime obstacle mutation — refresh the collision broadphase.
+        rebuildSpatialIndex()
 
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(GameConfig.inkWallDuration))
@@ -119,6 +121,8 @@ extension GameController {
                 $0.center == center && $0.halfX == halfX && $0.halfZ == halfZ
             }) {
                 self.obstacles.remove(at: index)
+                // Removal shifts every later index — rebuild the grid wholesale.
+                self.rebuildSpatialIndex()
             }
         }
     }

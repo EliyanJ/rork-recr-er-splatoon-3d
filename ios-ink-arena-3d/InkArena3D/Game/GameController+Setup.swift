@@ -73,6 +73,9 @@ extension GameController {
             buildCityBackdrop(root)
         }
         walkableObstacles = obstacles.filter(\.isWalkable)
+        // Build the collision broadphase from the now-complete static geometry
+        // (no-op in training, which keeps the legacy linear scan).
+        rebuildSpatialIndex()
         // Bot navigation grid + patrol points — needs the full static
         // geometry (obstacles, water, ramps) already built above.
         if !isTraining {
