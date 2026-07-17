@@ -125,7 +125,7 @@ extension GameController {
                     for bot in bots where !bot.isDown && bot.team != projectile.team {
                         let botPos = bot.container.position
                         if characterHit(pos, target: botPos, radius: projectile.hitRadius) {
-                            hitBot(bot, at: botPos, damage: GameConfig.maxHP, by: projectile.team, ownerIndex: projectile.ownerIndex)
+                            hitBot(bot, at: botPos, damage: GameConfig.grenadePlayerDamage, by: projectile.team, ownerIndex: projectile.ownerIndex)
                             directHit = true
                             break
                         }
@@ -291,7 +291,7 @@ extension GameController {
         for bot in bots where !bot.isDown && bot.team != team {
             let botPos = bot.container.position
             if simd_length(SIMD2<Float>(pos.x - botPos.x, pos.z - botPos.z)) < GameConfig.grenadeSplatRange {
-                hitBot(bot, at: botPos, damage: GameConfig.maxHP, by: team, ownerIndex: ownerIndex)
+                hitBot(bot, at: botPos, damage: GameConfig.grenadePlayerDamage, by: team, ownerIndex: ownerIndex)
             }
         }
         if team != localTeam, !isPlayerDown, !isMatchOver, let playerPos = playerContainer?.position,

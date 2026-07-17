@@ -331,13 +331,13 @@ extension GameController {
             }
         }
 
-        // HP regeneration — dramatically faster while submerged in friendly
-        // ink: the delay before it kicks in is nearly skipped and each tick
-        // is much shorter, so diving visibly refills the health bar.
+        // HP regeneration — faster while submerged in friendly ink: the
+        // delay before it kicks in is shorter and each tick is quicker, so
+        // diving visibly refills the health bar without being instant.
         let submergedInFriendly = isDiving && standing == localTeam
-        let regenDelay = submergedInFriendly ? 0.4 : GameConfig.hpRegenDelay
+        let regenDelay = submergedInFriendly ? 0.30 : GameConfig.hpRegenDelay
         let regenInterval = submergedInFriendly
-            ? 0.15 * perks.hpRegenMultiplier
+            ? 0.40 * perks.hpRegenMultiplier
             : GameConfig.hpRegenInterval * perks.hpRegenMultiplier
         if playerHP < GameConfig.playerMaxHP, elapsed - lastDamageTime > regenDelay {
             hpRegenTick -= Double(dt)

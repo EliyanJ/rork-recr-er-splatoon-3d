@@ -54,8 +54,8 @@ struct GameHUDView: View {
 
             if let event = controller.splatEvent {
                 SplatEventBanner(event: event)
-                    .padding(.top, 90)
                     .frame(maxHeight: .infinity, alignment: .top)
+                    .padding(.top, 4)
             }
 
             if isScoreboardVisible {
@@ -664,38 +664,55 @@ private struct ScoreboardOverlay: View {
     }
 }
 
-/// Stylized one-shot elimination callout. The highlighted name always gets
-/// the red-outline treatment, whichever side scored the splat, with a quick
-/// scale-in impact pop for extra dopamine.
+/// Stylized one-shot elimination callout shown at the very top of the
+/// screen. Only appears when the local player scores a kill. Uses the
+/// player's team color, a splash icon, and animates in with a scale pop
+/// then slides up and fades out.
 private struct SplatEventBanner: View {
     let event: GameController.SplatEvent
     @State private var didPop = false
+    @State private var fadeOut = false
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: event.isPlayerVictim ? "burst.fill" : "scope")
-                .font(.system(size: 15, weight: .black))
-                .foregroundStyle(event.isPlayerVictim ? Team.purple.color : Team.orange.color)
+        HStack(spacing: 10) {
+            Image(systemName: "drop.fill")
+                .font(.system(size: 18, weight: .black))
+                .foregroundStyle(Team.orange.color)
+                .scaleEffect(didPop ? 1 : 0.3)
+
             Text(event.headline)
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .foregroundStyle(Team.orange.color)
+
             Text(event.name)
-                .font(.system(size: 15, weight: .black, design: .rounded))
+                .font(.system(size: 17, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 2)
-                .background(Capsule().fill(.black.opacity(0.3)))
-                .overlay(Capsule().stroke(Color.red, lineWidth: 2))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Team.orange.color.opacity(0.35)))
+                .overlay(Capsule().stroke(Team.orange.color, lineWidth: 2))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 9)
-        .background(Capsule().fill(.black.opacity(0.6)))
-        .overlay(Capsule().stroke(.white.opacity(0.2), lineWidth: 1.5))
-        .scaleEffect(didPop ? 1 : 1.4)
-        .opacity(didPop ? 1 : 0)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 11)
+        .background(
+            Capsule().fill(.black.opacity(0.7))
+        )
+        .overlay(
+            Capsule().stroke(Team.orange.color.opacity(0.6), lineWidth: 1.5)
+        )
+        .shadow(color: Team.orange.color.opacity(0.4), radius: 12)
+        .scaleEffect(didPop ? 1 : 0.5)
+        .offset(y: fadeOut ? -30 : 0)
+        .opacity(fadeOut ? 0 : (didPop ? 1 : 0))
         .onAppear {
             didPop = false
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.55)) { didPop = true }
+            fadeOut = false
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                didPop = true
+            }
+            withAnimation(.easeIn(duration: 0.4).delay(1.6)) {
+                fadeOut = true
+            }
         }
         .id(event.id)
         .transition(.opacity)

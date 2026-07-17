@@ -54,12 +54,9 @@ extension GameController {
         }
         spawnKillExplosion(at: position, team: attacker)
         AudioService.shared.playEnemySplat(volume: spatialVolume(1.0, at: position))
-        if bot.team != localTeam {
+        if bot.team != localTeam, ownerIndex == 0, bot.statsIndex < liveStats.count {
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            showBanner("Rival éclaboussé !")
-            if ownerIndex == 0, bot.statsIndex < liveStats.count {
-                showSplatEvent(headline: "TU AS ÉCLABOUSSÉ", name: liveStats[bot.statsIndex].name, isPlayerVictim: false)
-            }
+            showSplatEvent(headline: "Vous avez noyé", name: liveStats[bot.statsIndex].name, isPlayerVictim: false)
         }
         bot.setLoop(nil)
         bot.animator.playOnce(bot.splatAnim, restoreAfter: .milliseconds(900))

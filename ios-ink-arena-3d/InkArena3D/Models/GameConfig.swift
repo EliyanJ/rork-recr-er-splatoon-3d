@@ -290,9 +290,10 @@ enum GameConfig {
     /// character vibrating right at the top of certain walls.
     static let wallClimbTopCommitDistance: Float = 0.5
 
-    /// Bot durability — raised (+33%) so fights last longer and stay
-    /// readable; the sniper one-shot rule is charge-based, never affected.
-    static let maxHP: Int = 4
+    /// Bot durability — identical to the player's pool so fights feel fair
+    /// and bots don't melt faster than the player. The sniper one-shot rule
+    /// is charge-based and derives from this value, so it stays consistent.
+    static let maxHP: Int = 10
 
     /// Player durability — generous pool plus out-of-combat regeneration so
     /// a single skirmish never feels like an instant death. Raised (+25%)
@@ -308,7 +309,7 @@ enum GameConfig {
     static let hitFlinchCooldown: Double = 0.35
 
     /// HP at or below which a bot switches to injured (near-death) animations.
-    static let botLowHPThreshold: Int = 1
+    static let botLowHPThreshold: Int = 4
     /// HP at or below which the player switches to injured animations.
     static let playerLowHPThreshold: Int = 4
 

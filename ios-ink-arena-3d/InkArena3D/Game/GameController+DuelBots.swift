@@ -210,7 +210,7 @@ extension GameController {
         AudioService.shared.playEnemySplat(volume: spatialVolume(1.0, at: pos))
         if killerIndex == 0, bot.statsIndex < liveStats.count {
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            showSplatEvent(headline: "TU AS ÉCLABOUSSÉ", name: liveStats[bot.statsIndex].name, isPlayerVictim: false)
+            showSplatEvent(headline: "Vous avez noyé", name: liveStats[bot.statsIndex].name, isPlayerVictim: false)
         }
         bot.setLoop(nil)
         bot.animator.playOnce(bot.splatAnim, restoreAfter: .milliseconds(900))
