@@ -82,8 +82,9 @@ private struct TileInstance {
 /// design that produced thousands of draw calls late-game): the arena is cut
 /// into fixed chunks. Each chunk keeps at most one merged ModelEntity per team,
 /// whose mesh is the union of every claimed cell of that team inside the chunk.
-/// Painting marks touched chunks dirty; `flushPaintBatches()` rebuilds only the
-/// dirty chunks' merged meshes once per frame. Result: paint draw calls drop
+/// Painting marks touched (chunk, team) slots dirty; `flushPaintBatches()`
+/// rebuilds only those dirty slots' merged meshes, up to a per-flush budget.
+/// Result: paint draw calls drop
 /// from ≈(number of painted tiles) to ≈(number of non-empty chunk/team meshes),
 /// a ~30–60× reduction on a fully covered map.
 ///
@@ -127,8 +128,13 @@ final class PaintGrid {
     private let chunkRows: Int
     /// One merged ModelEntity per (chunk, team). Index = chunk * 2 + teamSlot.
     private var chunkEntities: [ModelEntity?]
-    /// Chunks whose merged meshes need rebuilding on the next flush.
-    private var dirtyChunks: Set<Int> = []
+    /// Slots (chunk × team, index = chunk * 2 + teamSlot) whose merged mesh
+    /// needs rebuilding on the next flush. Tracking per-team means repainting
+    /// only one team's tiles never rebuilds the other team's mesh in that
+    /// chunk. `dirtySlots` is the membership set (dedup); `dirtyQueue` gives a
+    /// FIFO order for the per-flush rebuild budget so no slot starves.
+    private var dirtySlots: Set<Int> = []
+    private var dirtyQueue: [Int] = []
 
     private(set) var orangeCount = 0
     private(set) var purpleCount = 0
@@ -316,6 +322,15 @@ final class PaintGrid {
 
     private func teamSlot(_ team: Team) -> Int { team == .orange ? 0 : 1 }
 
+    /// Marks one (chunk, team) slot dirty. New slots are appended to the FIFO
+    /// queue so the per-flush budget drains them in order without starvation.
+    private func markDirty(chunk: Int, team: Team) {
+        let slot = chunk * 2 + teamSlot(team)
+        if dirtySlots.insert(slot).inserted {
+            dirtyQueue.append(slot)
+        }
+    }
+
     private func chunkIndex(forTile index: Int) -> Int {
         let col = index % cols
         let row = index / cols
@@ -349,7 +364,13 @@ final class PaintGrid {
         if instances[index] == nil {
             instances[index] = makeInstance(index)
         }
-        dirtyChunks.insert(chunkIndex(forTile: index))
+        let chunk = chunkIndex(forTile: index)
+        // The new owner's mesh always needs the tile added.
+        markDirty(chunk: chunk, team: team)
+        // A repaint must also rebuild the PREVIOUS owner's mesh so the tile is
+        // removed from it. A virgin tile (current == nil) only touches the new
+        // team's mesh.
+        if let current { markDirty(chunk: chunk, team: current) }
         return 1
     }
 
@@ -387,15 +408,21 @@ final class PaintGrid {
         return TileInstance(matrix: matrix, rotation: rotation, meshPick: meshPick, clip: clip)
     }
 
-    /// Rebuilds the merged meshes for every chunk touched since the last call.
-    /// Call once per frame after all painting for that frame is done.
-    func flushPaintBatches() {
-        guard !dirtyChunks.isEmpty else { return }
-        for chunk in dirtyChunks {
-            rebuildChunk(chunk, team: .orange)
-            rebuildChunk(chunk, team: .purple)
+    /// Rebuilds up to `maxRebuilds` dirty (chunk, team) slots, oldest first.
+    /// Any slot left over stays queued for the next flush, so a huge one-shot
+    /// paint (e.g. a grenade covering ~9 chunks × 2 teams) spreads its mesh
+    /// generation over a few flushes instead of spiking a single frame.
+    /// Ownership + coverage are already applied instantly at paint time; only
+    /// this visual merge is budgeted.
+    func flushPaintBatches(maxRebuilds: Int) {
+        var processed = 0
+        while processed < maxRebuilds, !dirtyQueue.isEmpty {
+            let slot = dirtyQueue.removeFirst()
+            // Skip stale queue entries (already flushed or de-duped).
+            guard dirtySlots.remove(slot) != nil else { continue }
+            rebuildChunk(slot / 2, team: slot % 2 == 0 ? .orange : .purple)
+            processed += 1
         }
-        dirtyChunks.removeAll(keepingCapacity: true)
     }
 
     /// Visits every cell index belonging to `chunk` in the floor grid.

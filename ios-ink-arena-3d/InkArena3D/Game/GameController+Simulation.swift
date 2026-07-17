@@ -127,7 +127,7 @@ extension GameController {
         paintFlushAccum += dt
         if paintFlushAccum >= qualitySettings.paintRebuildInterval {
             paintFlushAccum = 0
-            grid.flushPaintBatches()
+            grid.flushPaintBatches(maxRebuilds: qualitySettings.maxChunkRebuildsPerFlush)
         }
         refreshPaintPerfDebug(grid: grid)
     }

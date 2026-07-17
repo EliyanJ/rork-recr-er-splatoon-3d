@@ -74,6 +74,10 @@ struct QualitySettings {
     /// Width/height of one paint chunk, in tiles. Bigger chunks mean fewer,
     /// larger rebuilds instead of many small ones.
     let paintChunkSize: Int
+    /// Max number of (chunk, team) meshes rebuilt per paint flush. Caps the
+    /// worst-case cost of a single flush (e.g. a grenade painting many chunks
+    /// at once); leftover dirty slots roll to the next flush.
+    let maxChunkRebuildsPerFlush: Int
     /// Fewer points on the generated ink-splash silhouette — a plainer but
     /// much cheaper shape for the lightest tiers.
     let simplifiedSplash: Bool
@@ -113,6 +117,7 @@ struct QualitySettings {
                 sunIntensityScale: 1,
                 paintRebuildInterval: 1.0 / 30,
                 paintChunkSize: 8,
+                maxChunkRebuildsPerFlush: 10,
                 simplifiedSplash: false,
                 botThinkInterval: 1.0 / 60,
                 decorEnabled: true,
@@ -128,6 +133,7 @@ struct QualitySettings {
                 sunIntensityScale: 1,
                 paintRebuildInterval: 1.0 / 20,
                 paintChunkSize: 10,
+                maxChunkRebuildsPerFlush: 8,
                 simplifiedSplash: false,
                 botThinkInterval: 1.0 / 30,
                 decorEnabled: true,
@@ -143,6 +149,7 @@ struct QualitySettings {
                 sunIntensityScale: 1,
                 paintRebuildInterval: 1.0 / 15,
                 paintChunkSize: 12,
+                maxChunkRebuildsPerFlush: 6,
                 simplifiedSplash: true,
                 botThinkInterval: 1.0 / 20,
                 decorEnabled: false,
@@ -158,6 +165,7 @@ struct QualitySettings {
                 sunIntensityScale: 0.75,
                 paintRebuildInterval: 1.0 / 10,
                 paintChunkSize: 16,
+                maxChunkRebuildsPerFlush: 4,
                 simplifiedSplash: true,
                 botThinkInterval: 1.0 / 15,
                 decorEnabled: false,
