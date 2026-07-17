@@ -19,18 +19,26 @@ enum DevicePerformance {
 
         // iPhone<major>,<minor>. The major generation maps (best-effort,
         // no per-model Pro/non-Pro split available from the identifier
-        // alone) to a starting preset:
+        // alone) to a starting preset. The A16 non-Pro chips (iPhone 15 /
+        // 15 Plus = iPhone15,4 / iPhone15,5) share the same `major` as the
+        // iPhone 14 Pro, so the whole 15 group starts at Standard rather than
+        // Ultra — the A16 doesn't hold the full Ultra budget in practice:
         //   ≤12  → A13 and older (iPhone 11 / SE2 and below)   → lite
-        //   13   → A14 (iPhone 12 family)                       → performance
-        //   14   → A15 (iPhone 13 / 14 / SE3)                   → standard
-        //   ≥15  → A16 and newer (iPhone 14 Pro / 15 / 16+)     → ultra
+        //   13   → A14 (iPhone 12 family)                       → lite (TODO: performance)
+        //   14   → A15 (iPhone 13 / 14 / SE3)                   → performance
+        //   15   → A16 (iPhone 14 Pro, iPhone 15 / 15 Plus)     → standard
+        //   ≥16  → A17 Pro and newer (iPhone 15 Pro, 16+)       → ultra
         let digits = identifier.dropFirst("iPhone".count).prefix { $0.isNumber }
         guard let major = Int(digits) else { return .ultra }
         switch major {
-        case ..<13: return .lite
-        case 13: return .performance
-        case 14: return .standard
-        default: return .ultra
+        case ..<13: return .lite // ≤ A13 (iPhone 11 / SE2 and older)
+        // TODO: remonter le case 13 (A14 / iPhone 12) à .performance une fois
+        // le chantier 1 (optimisations paint grid / projectiles / VFX) mergé
+        // et validé sur device.
+        case 13: return .lite // A14 (iPhone 12 family)
+        case 14: return .performance // A15 (iPhone 13 / 14 / SE3)
+        case 15: return .standard // A16 (iPhone 14 Pro, iPhone 15 / 15 Plus)
+        default: return .ultra // ≥ iPhone16,x (15 Pro, 16+, A17 Pro and newer)
         }
     }
 
