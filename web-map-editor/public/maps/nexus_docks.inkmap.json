@@ -1,0 +1,2540 @@
+{
+  "version": 1,
+  "name": "Nexus Docks",
+  "ground": {
+    "shape": "rectangle",
+    "width": 56,
+    "depth": 36,
+    "radius": 30,
+    "points": [],
+    "color": "#474A54"
+  },
+  "blocks": [
+    {
+      "id": "solid_1",
+      "name": "Mur nord",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 0.8,
+        "z": -18.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 56.8,
+        "height": 1.6,
+        "depth": 0.4,
+        "radius": 0
+      },
+      "color": "#4C4C5C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 56.8,
+          "y": 1.6,
+          "z": 0.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_2",
+      "name": "Mur sud",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 0.8,
+        "z": 18.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 56.8,
+        "height": 1.6,
+        "depth": 0.4,
+        "radius": 0
+      },
+      "color": "#4C4C5C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 56.8,
+          "y": 1.6,
+          "z": 0.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_3",
+      "name": "Mur est",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 28.2,
+        "y": 0.8,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.4,
+        "height": 1.6,
+        "depth": 36.8,
+        "radius": 0
+      },
+      "color": "#4C4C5C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.4,
+          "y": 1.6,
+          "z": 36.8
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_4",
+      "name": "Mur ouest",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -28.2,
+        "y": 0.8,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.4,
+        "height": 1.6,
+        "depth": 36.8,
+        "radius": 0
+      },
+      "color": "#4C4C5C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.4,
+          "y": 1.6,
+          "z": 36.8
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn_5",
+      "name": "Spawn joueur (orange)",
+      "geometry": "cylinder",
+      "kind": "spawn",
+      "position": {
+        "x": -24,
+        "y": 0.03,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.4,
+        "height": 0.05,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#4FFF8E",
+      "opacity": 0.9,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 3.4,
+          "y": 0.05,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "spawn": {
+        "team": "a"
+      }
+    },
+    {
+      "id": "spawn_6",
+      "name": "Spawn adverse (violet)",
+      "geometry": "cylinder",
+      "kind": "spawn",
+      "position": {
+        "x": 24,
+        "y": 0.03,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.4,
+        "height": 0.05,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#4FFF8E",
+      "opacity": 0.9,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 3.4,
+          "y": 0.05,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "spawn": {
+        "team": "b"
+      }
+    },
+    {
+      "id": "solid_7",
+      "name": "Plateforme centrale",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 0.75,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 10,
+        "height": 1.5,
+        "depth": 7,
+        "radius": 0
+      },
+      "color": "#808799",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 10,
+          "y": 1.5,
+          "z": 7
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_8",
+      "name": "Rampe centrale ouest",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -7.0,
+        "y": 0.75,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0.0,
+        "z": 20.56
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.272,
+        "height": 0.22,
+        "depth": 3.2,
+        "radius": 0
+      },
+      "color": "#808799",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.272001872658765,
+          "y": 0.22,
+          "z": 3.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_9",
+      "name": "Rampe centrale est",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 7.0,
+        "y": 0.75,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 180.0,
+        "z": 20.56
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.272,
+        "height": 0.22,
+        "depth": 3.2,
+        "radius": 0
+      },
+      "color": "#808799",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.272001872658765,
+          "y": 0.22,
+          "z": 3.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_10",
+      "name": "Rampe centrale nord",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": -5.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": -90.0,
+        "z": 20.56
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.272,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#808799",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.272001872658765,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_11",
+      "name": "Rampe centrale sud",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": 5.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90.0,
+        "z": 20.56
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.272,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#808799",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.272001872658765,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_12",
+      "name": "Deck nord-ouest",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -11,
+        "y": 1.25,
+        "z": -13.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 14,
+        "height": 2.5,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 14,
+          "y": 2.5,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_13",
+      "name": "Deck nord-est",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 11,
+        "y": 1.25,
+        "z": -13.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 14,
+        "height": 2.5,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 14,
+          "y": 2.5,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_14",
+      "name": "Tour de controle nord",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 2.5,
+        "z": -14
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5,
+        "height": 5,
+        "depth": 5,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5,
+          "y": 5,
+          "z": 5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_15",
+      "name": "Rampe deck NO",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -20.25,
+        "y": 1.25,
+        "z": -13.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": -0.0,
+        "z": 29.05
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.148,
+        "height": 0.22,
+        "depth": 3,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.1478150704935,
+          "y": 0.22,
+          "z": 3
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_16",
+      "name": "Rampe deck NE",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 20.25,
+        "y": 1.25,
+        "z": -13.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": -180.0,
+        "z": 29.05
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.148,
+        "height": 0.22,
+        "depth": 3,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.1478150704935,
+          "y": 0.22,
+          "z": 3
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_17",
+      "name": "Rampe tour nord O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -4.75,
+        "y": 3.75,
+        "z": -14.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0.0,
+        "z": 29.05
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.148,
+        "height": 0.22,
+        "depth": 2.4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.1478150704935,
+          "y": 0.22,
+          "z": 2.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_18",
+      "name": "Rampe tour nord E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 4.75,
+        "y": 3.75,
+        "z": -14.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 180.0,
+        "z": 29.05
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.148,
+        "height": 0.22,
+        "depth": 2.4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.1478150704935,
+          "y": 0.22,
+          "z": 2.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_19",
+      "name": "Tour defense SO - sommet",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -9,
+        "y": 2.0,
+        "z": 8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.5,
+        "height": 4,
+        "depth": 4.5,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.5,
+          "y": 4,
+          "z": 4.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_20",
+      "name": "Tour defense SO - palier",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -13.75,
+        "y": 1.0,
+        "z": 8.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_21",
+      "name": "Tour defense SO - rampe basse",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -18.25,
+        "y": 1.0,
+        "z": 8.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -0.0,
+        "z": 26.57
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.472,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.47213595499958,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_22",
+      "name": "Tour defense SO - rampe haute",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -13.05,
+        "y": 3.0,
+        "z": 8.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -0.0,
+        "z": 20.32
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.758,
+        "height": 0.22,
+        "depth": 2.2,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.758472019555188,
+          "y": 0.22,
+          "z": 2.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_23",
+      "name": "Tour NE - sommet",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18,
+        "y": 2.0,
+        "z": -8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.5,
+        "height": 4,
+        "depth": 4.5,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.5,
+          "y": 4,
+          "z": 4.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_24",
+      "name": "Tour NE - palier",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18.0,
+        "y": 1.0,
+        "z": -3.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.4,
+        "height": 2,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.4,
+          "y": 2,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_25",
+      "name": "Tour NE - rampe basse",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18.0,
+        "y": 1.0,
+        "z": 1.25
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90.0,
+        "z": 26.57
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.472,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.47213595499958,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_26",
+      "name": "Tour NE - rampe haute",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18.0,
+        "y": 3.0,
+        "z": -3.95
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90.0,
+        "z": 20.32
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.758,
+        "height": 0.22,
+        "depth": 2.2,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.758472019555188,
+          "y": 0.22,
+          "z": 2.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_27",
+      "name": "Tour observation SE - sommet",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 10,
+        "y": 1.5,
+        "z": 5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4,
+        "height": 3,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4,
+          "y": 3,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_28",
+      "name": "Tour observation SE - palier",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 14.5,
+        "y": 0.75,
+        "z": 5.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 1.5,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 1.5,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_29",
+      "name": "Tour observation SE - rampe basse",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18.5,
+        "y": 0.75,
+        "z": 5.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -180.0,
+        "z": 26.57
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.354,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.3541019662496847,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_30",
+      "name": "Tour observation SE - rampe haute",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 13.8,
+        "y": 2.25,
+        "z": 5.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -180.0,
+        "z": 15.52
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.604,
+        "height": 0.22,
+        "depth": 2.2,
+        "radius": 0
+      },
+      "color": "#3D4254",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.604462507680822,
+          "y": 0.22,
+          "z": 2.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_31",
+      "name": "Bassin NO",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -22,
+        "y": 0.03,
+        "z": 12
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 0.06,
+        "depth": 6,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 5.0,
+          "y": 0.06,
+          "z": 6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_32",
+      "name": "Bassin centre-N",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -5,
+        "y": 0.03,
+        "z": 15.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 8,
+        "height": 0.06,
+        "depth": 4.4,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 8,
+          "y": 0.06,
+          "z": 4.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_33",
+      "name": "Bassin NE",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 22,
+        "y": 0.03,
+        "z": 12
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6,
+        "height": 0.06,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 6,
+          "y": 0.06,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_34",
+      "name": "Bassin SE",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 25,
+        "y": 0.03,
+        "z": -16.3
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 0.06,
+        "depth": 3.0,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 5.0,
+          "y": 0.06,
+          "z": 3.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_35",
+      "name": "Bassin SO",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -15,
+        "y": 0.03,
+        "z": -4
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 0.06,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 5.0,
+          "y": 0.06,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_36",
+      "name": "Mur peignable O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -12,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.6,
+        "height": 3,
+        "depth": 7,
+        "radius": 0
+      },
+      "color": "#948F9E",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.6,
+          "y": 3,
+          "z": 7
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_37",
+      "name": "Mur peignable E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 13,
+        "y": 1.5,
+        "z": -2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.6,
+        "height": 3,
+        "depth": 7,
+        "radius": 0
+      },
+      "color": "#948F9E",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.6,
+          "y": 3,
+          "z": 7
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_38",
+      "name": "Raccourci peignable NO",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -11,
+        "y": 1.25,
+        "z": -10.9
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6,
+        "height": 2.5,
+        "depth": 0.6,
+        "radius": 0
+      },
+      "color": "#948F9E",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 6,
+          "y": 2.5,
+          "z": 0.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_39",
+      "name": "Raccourci peignable NE",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 11,
+        "y": 1.25,
+        "z": -10.9
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6,
+        "height": 2.5,
+        "depth": 0.6,
+        "radius": 0
+      },
+      "color": "#948F9E",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 6,
+          "y": 2.5,
+          "z": 0.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_40",
+      "name": "Cabane dock O - mur arriere",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -19.5,
+        "y": 1.1,
+        "z": 13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 4.4,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 4.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_41",
+      "name": "Cabane dock O - mur porte A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -14.5,
+        "y": 1.1,
+        "z": 11.475
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_42",
+      "name": "Cabane dock O - mur porte B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -14.5,
+        "y": 1.1,
+        "z": 14.525
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_43",
+      "name": "Cabane dock O - mur cote A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -17,
+        "y": 1.1,
+        "z": 10.8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_44",
+      "name": "Cabane dock O - mur cote B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -17,
+        "y": 1.1,
+        "z": 15.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_45",
+      "name": "Cabane dock O - toit",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -17,
+        "y": 2.31,
+        "z": 13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.6,
+        "height": 0.22,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#33F2E6",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.6,
+          "y": 0.22,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_46",
+      "name": "Cabane dock E - mur arriere",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18.5,
+        "y": 1.1,
+        "z": 12.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 4.4,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 4.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_47",
+      "name": "Cabane dock E - mur porte A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 13.5,
+        "y": 1.1,
+        "z": 10.975
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_48",
+      "name": "Cabane dock E - mur porte B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 13.5,
+        "y": 1.1,
+        "z": 14.025
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_49",
+      "name": "Cabane dock E - mur cote A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 16,
+        "y": 1.1,
+        "z": 10.3
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_50",
+      "name": "Cabane dock E - mur cote B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 16,
+        "y": 1.1,
+        "z": 14.7
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#59546B",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_51",
+      "name": "Cabane dock E - toit",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 16,
+        "y": 2.31,
+        "z": 12.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.6,
+        "height": 0.22,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#B866FF",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.6,
+          "y": 0.22,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_52",
+      "name": "Conteneur nord",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 0,
+        "y": 0.85,
+        "z": 11.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.2,
+        "height": 1.7,
+        "depth": 1.5,
+        "radius": 0
+      },
+      "color": "#1A8085",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.2,
+          "y": 1.7,
+          "z": 1.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_53",
+      "name": "Conteneur NE",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 9,
+        "y": 0.8,
+        "z": 14.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 2.8,
+        "height": 1.6,
+        "depth": 1.4,
+        "radius": 0
+      },
+      "color": "#61479E",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 2.8,
+          "y": 1.6,
+          "z": 1.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_54",
+      "name": "Conteneur O",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -16,
+        "y": 0.8,
+        "z": 2.5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.5,
+        "height": 1.6,
+        "depth": 3,
+        "radius": 0
+      },
+      "color": "#61479E",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.5,
+          "y": 1.6,
+          "z": 3
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_55",
+      "name": "Conteneur SE",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 8,
+        "y": 0.8,
+        "z": -9
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 2.8,
+        "height": 1.6,
+        "depth": 1.4,
+        "radius": 0
+      },
+      "color": "#1A8085",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 2.8,
+          "y": 1.6,
+          "z": 1.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_56",
+      "name": "Caisse SO",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -7,
+        "y": 0.7,
+        "z": -8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.4,
+        "height": 1.4,
+        "depth": 1.4,
+        "radius": 0
+      },
+      "color": "#FFB833",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.4,
+          "y": 1.4,
+          "z": 1.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_57",
+      "name": "Caisse NE",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 7,
+        "y": 0.7,
+        "z": 8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.4,
+        "height": 1.4,
+        "depth": 1.4,
+        "radius": 0
+      },
+      "color": "#A8E640",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.4,
+          "y": 1.4,
+          "z": 1.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_58",
+      "name": "Caisse centre-N",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -4,
+        "y": 0.75,
+        "z": -10.4
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.6,
+        "height": 1.5,
+        "depth": 1.6,
+        "radius": 0
+      },
+      "color": "#1A8085",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.6,
+          "y": 1.5,
+          "z": 1.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_59",
+      "name": "Bidon de peinture O",
+      "geometry": "cylinder",
+      "kind": "solid",
+      "position": {
+        "x": -20,
+        "y": 0.5,
+        "z": -8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "radius": 0
+      },
+      "color": "#33F2E6",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_60",
+      "name": "Bidon de peinture E",
+      "geometry": "cylinder",
+      "kind": "solid",
+      "position": {
+        "x": 20,
+        "y": 0.5,
+        "z": 8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "radius": 0
+      },
+      "color": "#FFB833",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    }
+  ]
+}

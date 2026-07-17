@@ -1,0 +1,2216 @@
+{
+  "map_name": "Splash - Vieux Bassin v1",
+  "size_meters": {
+    "width_x": 56,
+    "length_y": 66
+  },
+  "height_range_meters": {
+    "min": -4.2,
+    "max": 9.0
+  },
+  "symmetry": "180_degree_rotation",
+  "theme": "vieux port mediterraneen - quais, canal, entrepots, phare, galeries",
+  "object_count": 110,
+  "objects": [
+    {
+      "name": "BARREL_ROW_N",
+      "location": [
+        12,
+        5.8,
+        0.6
+      ],
+      "dimensions": [
+        3.4,
+        1.2,
+        1.2
+      ],
+      "rotation_z_deg": -10,
+      "color_rgba": [
+        0.4,
+        0.3,
+        0.22,
+        1.0
+      ]
+    },
+    {
+      "name": "BARREL_ROW_S",
+      "location": [
+        -12,
+        -5.8,
+        0.6
+      ],
+      "dimensions": [
+        3.4,
+        1.2,
+        1.2
+      ],
+      "rotation_z_deg": 170,
+      "color_rgba": [
+        0.4,
+        0.3,
+        0.22,
+        1.0
+      ]
+    },
+    {
+      "name": "BOARDWALK_N",
+      "location": [
+        0,
+        5.2,
+        0.1
+      ],
+      "dimensions": [
+        46,
+        3.5,
+        0.4
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "BOARDWALK_S",
+      "location": [
+        0,
+        -5.2,
+        0.1
+      ],
+      "dimensions": [
+        46,
+        3.5,
+        0.4
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "BOAT_HULL_N",
+      "location": [
+        5.5,
+        9.5,
+        0.8
+      ],
+      "dimensions": [
+        6,
+        2.4,
+        1.6
+      ],
+      "rotation_z_deg": 32,
+      "color_rgba": [
+        0.25,
+        0.4,
+        0.55,
+        1.0
+      ]
+    },
+    {
+      "name": "BOAT_HULL_S",
+      "location": [
+        -5.5,
+        -9.5,
+        0.8
+      ],
+      "dimensions": [
+        6,
+        2.4,
+        1.6
+      ],
+      "rotation_z_deg": 212,
+      "color_rgba": [
+        0.25,
+        0.4,
+        0.55,
+        1.0
+      ]
+    },
+    {
+      "name": "CANAL_BED",
+      "location": [
+        0,
+        0,
+        -1.6
+      ],
+      "dimensions": [
+        56,
+        6,
+        0.2
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.2,
+        0.3,
+        0.4,
+        1.0
+      ]
+    },
+    {
+      "name": "CANAL_QUAYWALL_N",
+      "location": [
+        0,
+        3.25,
+        -0.75
+      ],
+      "dimensions": [
+        52,
+        0.5,
+        1.5
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "CANAL_QUAYWALL_S",
+      "location": [
+        0,
+        -3.25,
+        -0.75
+      ],
+      "dimensions": [
+        52,
+        0.5,
+        1.5
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "CANAL_WATER",
+      "location": [
+        0,
+        0,
+        -1.2
+      ],
+      "dimensions": [
+        56,
+        6,
+        0.5
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "CRANE_ARM_N",
+      "location": [
+        -19.5,
+        19.5,
+        3.6
+      ],
+      "dimensions": [
+        7,
+        0.9,
+        0.7
+      ],
+      "rotation_z_deg": -35,
+      "color_rgba": [
+        0.85,
+        0.2,
+        0.18,
+        1.0
+      ]
+    },
+    {
+      "name": "CRANE_ARM_S",
+      "location": [
+        19.5,
+        -19.5,
+        3.6
+      ],
+      "dimensions": [
+        7,
+        0.9,
+        0.7
+      ],
+      "rotation_z_deg": 145,
+      "color_rgba": [
+        0.85,
+        0.2,
+        0.18,
+        1.0
+      ]
+    },
+    {
+      "name": "CRANE_BASE_N",
+      "location": [
+        -21.5,
+        21,
+        1.75
+      ],
+      "dimensions": [
+        2.2,
+        2.2,
+        3.5
+      ],
+      "rotation_z_deg": 15,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "CRANE_BASE_S",
+      "location": [
+        21.5,
+        -21,
+        1.75
+      ],
+      "dimensions": [
+        2.2,
+        2.2,
+        3.5
+      ],
+      "rotation_z_deg": 195,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "CRATE_STACK_A_N",
+      "location": [
+        -6.5,
+        10,
+        0.9
+      ],
+      "dimensions": [
+        2.4,
+        2.4,
+        1.8
+      ],
+      "rotation_z_deg": -18,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "CRATE_STACK_A_S",
+      "location": [
+        6.5,
+        -10,
+        0.9
+      ],
+      "dimensions": [
+        2.4,
+        2.4,
+        1.8
+      ],
+      "rotation_z_deg": 162,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "CRATE_STACK_B_N",
+      "location": [
+        -8.2,
+        8.6,
+        0.55
+      ],
+      "dimensions": [
+        1.7,
+        1.7,
+        1.1
+      ],
+      "rotation_z_deg": 25,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "CRATE_STACK_B_S",
+      "location": [
+        8.2,
+        -8.6,
+        0.55
+      ],
+      "dimensions": [
+        1.7,
+        1.7,
+        1.1
+      ],
+      "rotation_z_deg": 205,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "FOOTBRIDGE_W_N",
+      "location": [
+        -17.5,
+        0.8,
+        0.35
+      ],
+      "dimensions": [
+        2.4,
+        9,
+        0.7
+      ],
+      "rotation_z_deg": 7,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "FOOTBRIDGE_W_S",
+      "location": [
+        17.5,
+        -0.8,
+        0.35
+      ],
+      "dimensions": [
+        2.4,
+        9,
+        0.7
+      ],
+      "rotation_z_deg": 187,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "FOUNTAIN",
+      "location": [
+        0,
+        0,
+        1.65
+      ],
+      "dimensions": [
+        2.6,
+        2.6,
+        1.1
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.9,
+        0.78,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "HARBOR_WATER_BACK_N",
+      "location": [
+        0,
+        31.5,
+        0.05
+      ],
+      "dimensions": [
+        58,
+        6,
+        0.3
+      ],
+      "rotation_z_deg": 0,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "HARBOR_WATER_BACK_S",
+      "location": [
+        0,
+        -31.5,
+        0.05
+      ],
+      "dimensions": [
+        58,
+        6,
+        0.3
+      ],
+      "rotation_z_deg": 180,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "HARBOR_WATER_NE_N",
+      "location": [
+        25.5,
+        25,
+        0.05
+      ],
+      "dimensions": [
+        12,
+        10,
+        0.3
+      ],
+      "rotation_z_deg": -30,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "HARBOR_WATER_NE_S",
+      "location": [
+        -25.5,
+        -25,
+        0.05
+      ],
+      "dimensions": [
+        12,
+        10,
+        0.3
+      ],
+      "rotation_z_deg": 150,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "HARBOR_WATER_NW_N",
+      "location": [
+        -24.5,
+        27.5,
+        0.05
+      ],
+      "dimensions": [
+        16,
+        13,
+        0.3
+      ],
+      "rotation_z_deg": 38,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "HARBOR_WATER_NW_S",
+      "location": [
+        24.5,
+        -27.5,
+        0.05
+      ],
+      "dimensions": [
+        16,
+        13,
+        0.3
+      ],
+      "rotation_z_deg": 218,
+      "color_rgba": [
+        0.15,
+        0.45,
+        0.7,
+        0.75
+      ]
+    },
+    {
+      "name": "HILL_GARDEN_N",
+      "location": [
+        10.489,
+        14.523,
+        2.3
+      ],
+      "dimensions": [
+        2.6,
+        2.6,
+        0.6
+      ],
+      "rotation_z_deg": 27,
+      "color_rgba": [
+        0.35,
+        0.55,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_GARDEN_S",
+      "location": [
+        -10.489,
+        -14.523,
+        2.3
+      ],
+      "dimensions": [
+        2.6,
+        2.6,
+        0.6
+      ],
+      "rotation_z_deg": 207,
+      "color_rgba": [
+        0.35,
+        0.55,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_LIGHTHOUSE_BODY_N",
+      "location": [
+        12.636,
+        14.343,
+        5.0
+      ],
+      "dimensions": [
+        3,
+        3,
+        6.0
+      ],
+      "rotation_z_deg": 17,
+      "color_rgba": [
+        0.85,
+        0.2,
+        0.18,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_LIGHTHOUSE_BODY_S",
+      "location": [
+        -12.636,
+        -14.343,
+        5.0
+      ],
+      "dimensions": [
+        3,
+        3,
+        6.0
+      ],
+      "rotation_z_deg": 197,
+      "color_rgba": [
+        0.85,
+        0.2,
+        0.18,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_LIGHTHOUSE_DECK_N",
+      "location": [
+        12.636,
+        14.343,
+        8.5
+      ],
+      "dimensions": [
+        4.2,
+        4.2,
+        1.0
+      ],
+      "rotation_z_deg": 17,
+      "color_rgba": [
+        0.95,
+        0.92,
+        0.85,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_LIGHTHOUSE_DECK_S",
+      "location": [
+        -12.636,
+        -14.343,
+        8.5
+      ],
+      "dimensions": [
+        4.2,
+        4.2,
+        1.0
+      ],
+      "rotation_z_deg": 197,
+      "color_rgba": [
+        0.95,
+        0.92,
+        0.85,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_RAMP_LOW_N",
+      "location": [
+        16.136,
+        6.316,
+        0.5
+      ],
+      "dimensions": [
+        4,
+        2.4,
+        1.0
+      ],
+      "rotation_z_deg": 17,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_RAMP_LOW_S",
+      "location": [
+        -16.136,
+        -6.316,
+        0.5
+      ],
+      "dimensions": [
+        4,
+        2.4,
+        1.0
+      ],
+      "rotation_z_deg": 197,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_RAMP_MID_N",
+      "location": [
+        21.307,
+        11.975,
+        2.0
+      ],
+      "dimensions": [
+        2.4,
+        3.5,
+        2.0
+      ],
+      "rotation_z_deg": 17,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_RAMP_MID_S",
+      "location": [
+        -21.307,
+        -11.975,
+        2.0
+      ],
+      "dimensions": [
+        2.4,
+        3.5,
+        2.0
+      ],
+      "rotation_z_deg": 197,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_TERRACE_LOW_N",
+      "location": [
+        15.5,
+        12.5,
+        1.0
+      ],
+      "dimensions": [
+        11.5,
+        10,
+        2.0
+      ],
+      "rotation_z_deg": 17,
+      "color_rgba": [
+        0.55,
+        0.58,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_TERRACE_LOW_S",
+      "location": [
+        -15.5,
+        -12.5,
+        1.0
+      ],
+      "dimensions": [
+        11.5,
+        10,
+        2.0
+      ],
+      "rotation_z_deg": 197,
+      "color_rgba": [
+        0.55,
+        0.58,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_TERRACE_MID_N",
+      "location": [
+        16.881,
+        12.086,
+        3.0
+      ],
+      "dimensions": [
+        6.5,
+        5.5,
+        2.0
+      ],
+      "rotation_z_deg": 17,
+      "color_rgba": [
+        0.55,
+        0.58,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "HILL_TERRACE_MID_S",
+      "location": [
+        -16.881,
+        -12.086,
+        3.0
+      ],
+      "dimensions": [
+        6.5,
+        5.5,
+        2.0
+      ],
+      "rotation_z_deg": 197,
+      "color_rgba": [
+        0.55,
+        0.58,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "KIOSK_N",
+      "location": [
+        7.5,
+        15.5,
+        1.1
+      ],
+      "dimensions": [
+        3.2,
+        3.2,
+        2.2
+      ],
+      "rotation_z_deg": -24,
+      "color_rgba": [
+        0.75,
+        0.3,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "KIOSK_S",
+      "location": [
+        -7.5,
+        -15.5,
+        1.1
+      ],
+      "dimensions": [
+        3.2,
+        3.2,
+        2.2
+      ],
+      "rotation_z_deg": 156,
+      "color_rgba": [
+        0.75,
+        0.3,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "LOW_WALL_N",
+      "location": [
+        -9.5,
+        20.5,
+        0.6
+      ],
+      "dimensions": [
+        7,
+        1.0,
+        1.2
+      ],
+      "rotation_z_deg": -14,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "LOW_WALL_S",
+      "location": [
+        9.5,
+        -20.5,
+        0.6
+      ],
+      "dimensions": [
+        7,
+        1.0,
+        1.2
+      ],
+      "rotation_z_deg": 166,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "PLANTER_N",
+      "location": [
+        -2.5,
+        18,
+        0.5
+      ],
+      "dimensions": [
+        3.6,
+        1.4,
+        1.0
+      ],
+      "rotation_z_deg": 8,
+      "color_rgba": [
+        0.35,
+        0.55,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "PLANTER_S",
+      "location": [
+        2.5,
+        -18,
+        0.5
+      ],
+      "dimensions": [
+        3.6,
+        1.4,
+        1.0
+      ],
+      "rotation_z_deg": 188,
+      "color_rgba": [
+        0.35,
+        0.55,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "PLAZA_DECK",
+      "location": [
+        0,
+        0,
+        0.85
+      ],
+      "dimensions": [
+        15,
+        10.5,
+        0.5
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.8,
+        0.72,
+        0.55,
+        1.0
+      ]
+    },
+    {
+      "name": "PLAZA_PIER_E",
+      "location": [
+        6.2,
+        0,
+        -0.45
+      ],
+      "dimensions": [
+        1.6,
+        1.6,
+        2.1
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "PLAZA_PIER_W",
+      "location": [
+        -6.2,
+        0,
+        -0.45
+      ],
+      "dimensions": [
+        1.6,
+        1.6,
+        2.1
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "PLAZA_RAMP_N",
+      "location": [
+        0,
+        6.2,
+        0.55
+      ],
+      "dimensions": [
+        5.5,
+        2.2,
+        1.1
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "PLAZA_RAMP_S",
+      "location": [
+        0,
+        -6.2,
+        0.55
+      ],
+      "dimensions": [
+        5.5,
+        2.2,
+        1.1
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "QUAY_GROUND_N",
+      "location": [
+        0,
+        16.5,
+        -0.1
+      ],
+      "dimensions": [
+        52,
+        27,
+        0.2
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "QUAY_GROUND_S",
+      "location": [
+        0,
+        -16.5,
+        -0.1
+      ],
+      "dimensions": [
+        52,
+        27,
+        0.2
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_DECK_N",
+      "location": [
+        3.0,
+        25.5,
+        0.9
+      ],
+      "dimensions": [
+        11,
+        5,
+        1.8
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_DECK_S",
+      "location": [
+        -3.0,
+        -25.5,
+        0.9
+      ],
+      "dimensions": [
+        11,
+        5,
+        1.8
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_MOORING_A_N",
+      "location": [
+        -2.665,
+        26.532,
+        1.6
+      ],
+      "dimensions": [
+        0.7,
+        0.7,
+        1.4
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_MOORING_A_S",
+      "location": [
+        2.665,
+        -26.532,
+        1.6
+      ],
+      "dimensions": [
+        0.7,
+        0.7,
+        1.4
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_MOORING_B_N",
+      "location": [
+        7.971,
+        28.407,
+        1.6
+      ],
+      "dimensions": [
+        0.7,
+        0.7,
+        1.4
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_MOORING_B_S",
+      "location": [
+        -7.971,
+        -28.407,
+        1.6
+      ],
+      "dimensions": [
+        0.7,
+        0.7,
+        1.4
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.52,
+        0.38,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_RAMP_MAIN_N",
+      "location": [
+        3.625,
+        21.955,
+        0.45
+      ],
+      "dimensions": [
+        5,
+        2.6,
+        0.9
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_RAMP_MAIN_S",
+      "location": [
+        -3.625,
+        -21.955,
+        0.45
+      ],
+      "dimensions": [
+        5,
+        2.6,
+        0.9
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_STEP_E_N",
+      "location": [
+        9.87,
+        25.696,
+        0.45
+      ],
+      "dimensions": [
+        3,
+        2.6,
+        0.9
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_STEP_E_S",
+      "location": [
+        -9.87,
+        -25.696,
+        0.45
+      ],
+      "dimensions": [
+        3,
+        2.6,
+        0.9
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_STEP_W_N",
+      "location": [
+        -3.523,
+        23.334,
+        0.45
+      ],
+      "dimensions": [
+        3,
+        2.6,
+        0.9
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "SPAWN_STEP_W_S",
+      "location": [
+        3.523,
+        -23.334,
+        0.45
+      ],
+      "dimensions": [
+        3,
+        2.6,
+        0.9
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "STALL_A_N",
+      "location": [
+        -4.6,
+        2.9,
+        1.8
+      ],
+      "dimensions": [
+        3,
+        1.6,
+        1.4
+      ],
+      "rotation_z_deg": -12,
+      "color_rgba": [
+        0.75,
+        0.3,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "STALL_A_S",
+      "location": [
+        4.6,
+        -2.9,
+        1.8
+      ],
+      "dimensions": [
+        3,
+        1.6,
+        1.4
+      ],
+      "rotation_z_deg": 168,
+      "color_rgba": [
+        0.75,
+        0.3,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "STALL_B_N",
+      "location": [
+        4.4,
+        3.2,
+        1.8
+      ],
+      "dimensions": [
+        2.6,
+        1.5,
+        1.3
+      ],
+      "rotation_z_deg": 14,
+      "color_rgba": [
+        0.75,
+        0.3,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "STALL_B_S",
+      "location": [
+        -4.4,
+        -3.2,
+        1.8
+      ],
+      "dimensions": [
+        2.6,
+        1.5,
+        1.3
+      ],
+      "rotation_z_deg": 194,
+      "color_rgba": [
+        0.75,
+        0.3,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_FLOOR_A_N",
+      "location": [
+        10.5,
+        9,
+        -4.1
+      ],
+      "dimensions": [
+        3.6,
+        12,
+        0.2
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_FLOOR_A_S",
+      "location": [
+        -10.5,
+        -9,
+        -4.1
+      ],
+      "dimensions": [
+        3.6,
+        12,
+        0.2
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_FLOOR_B_N",
+      "location": [
+        10.5,
+        0,
+        -4.1
+      ],
+      "dimensions": [
+        3.6,
+        6.4,
+        0.2
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_FLOOR_B_S",
+      "location": [
+        -10.5,
+        0,
+        -4.1
+      ],
+      "dimensions": [
+        3.6,
+        6.4,
+        0.2
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_LAMP_N",
+      "location": [
+        12.1,
+        4,
+        -2.6
+      ],
+      "dimensions": [
+        0.4,
+        0.4,
+        0.8
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.9,
+        0.78,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_LAMP_S",
+      "location": [
+        -12.1,
+        -4,
+        -2.6
+      ],
+      "dimensions": [
+        0.4,
+        0.4,
+        0.8
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.9,
+        0.78,
+        0.3,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_PORTAL_IN_N",
+      "location": [
+        10.5,
+        23.2,
+        0.3
+      ],
+      "dimensions": [
+        3.6,
+        0.8,
+        0.6
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.6,
+        0.3,
+        0.75,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_PORTAL_IN_S",
+      "location": [
+        -10.5,
+        -23.2,
+        0.3
+      ],
+      "dimensions": [
+        3.6,
+        0.8,
+        0.6
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.6,
+        0.3,
+        0.75,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_PORTAL_OUT_N",
+      "location": [
+        10.5,
+        -11.2,
+        0.3
+      ],
+      "dimensions": [
+        3.6,
+        0.8,
+        0.6
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.6,
+        0.3,
+        0.75,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_PORTAL_OUT_S",
+      "location": [
+        -10.5,
+        11.2,
+        0.3
+      ],
+      "dimensions": [
+        3.6,
+        0.8,
+        0.6
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.6,
+        0.3,
+        0.75,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_RAMP_IN_N",
+      "location": [
+        10.5,
+        19,
+        -2.0
+      ],
+      "dimensions": [
+        3.0,
+        8,
+        4.0
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_RAMP_IN_S",
+      "location": [
+        -10.5,
+        -19,
+        -2.0
+      ],
+      "dimensions": [
+        3.0,
+        8,
+        4.0
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_RAMP_OUT_N",
+      "location": [
+        10.5,
+        -7,
+        -2.0
+      ],
+      "dimensions": [
+        3.0,
+        8,
+        4.0
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_RAMP_OUT_S",
+      "location": [
+        -10.5,
+        7,
+        -2.0
+      ],
+      "dimensions": [
+        3.0,
+        8,
+        4.0
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_ROOF_CANAL_N",
+      "location": [
+        10.5,
+        0,
+        -1.62
+      ],
+      "dimensions": [
+        3.6,
+        6.4,
+        0.15
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.2,
+        0.3,
+        0.4,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_ROOF_CANAL_S",
+      "location": [
+        -10.5,
+        0,
+        -1.62
+      ],
+      "dimensions": [
+        3.6,
+        6.4,
+        0.15
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.2,
+        0.3,
+        0.4,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_ROOF_LAND_N",
+      "location": [
+        10.5,
+        9,
+        -0.8
+      ],
+      "dimensions": [
+        3.6,
+        12,
+        1.6
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_ROOF_LAND_S",
+      "location": [
+        -10.5,
+        -9,
+        -0.8
+      ],
+      "dimensions": [
+        3.6,
+        12,
+        1.6
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.62,
+        0.6,
+        0.56,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_WALL_E_A_N",
+      "location": [
+        12.55,
+        11.5,
+        -2.0
+      ],
+      "dimensions": [
+        0.5,
+        23,
+        4.0
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_WALL_E_A_S",
+      "location": [
+        -12.55,
+        -11.5,
+        -2.0
+      ],
+      "dimensions": [
+        0.5,
+        23,
+        4.0
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_WALL_W_A_N",
+      "location": [
+        8.45,
+        11.5,
+        -2.0
+      ],
+      "dimensions": [
+        0.5,
+        23,
+        4.0
+      ],
+      "rotation_z_deg": 0.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "TUNNEL_WALL_W_A_S",
+      "location": [
+        -8.45,
+        -11.5,
+        -2.0
+      ],
+      "dimensions": [
+        0.5,
+        23,
+        4.0
+      ],
+      "rotation_z_deg": 180.0,
+      "color_rgba": [
+        0.35,
+        0.3,
+        0.45,
+        1.0
+      ]
+    },
+    {
+      "name": "WALL_EAST_CUT_N",
+      "location": [
+        23,
+        20.5,
+        1.4
+      ],
+      "dimensions": [
+        1,
+        9,
+        2.8
+      ],
+      "rotation_z_deg": 42,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "WALL_EAST_CUT_S",
+      "location": [
+        -23,
+        -20.5,
+        1.4
+      ],
+      "dimensions": [
+        1,
+        9,
+        2.8
+      ],
+      "rotation_z_deg": 222,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "WALL_EAST_N",
+      "location": [
+        25.5,
+        10,
+        1.4
+      ],
+      "dimensions": [
+        1,
+        18,
+        2.8
+      ],
+      "rotation_z_deg": 10,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "WALL_EAST_S",
+      "location": [
+        -25.5,
+        -10,
+        1.4
+      ],
+      "dimensions": [
+        1,
+        18,
+        2.8
+      ],
+      "rotation_z_deg": 190,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "WALL_WEST_N",
+      "location": [
+        -25.5,
+        12,
+        1.4
+      ],
+      "dimensions": [
+        1,
+        22,
+        2.8
+      ],
+      "rotation_z_deg": -8,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "WALL_WEST_S",
+      "location": [
+        25.5,
+        -12,
+        1.4
+      ],
+      "dimensions": [
+        1,
+        22,
+        2.8
+      ],
+      "rotation_z_deg": 172,
+      "color_rgba": [
+        0.42,
+        0.4,
+        0.38,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_BLOCK_L_N",
+      "location": [
+        -18.152,
+        15.774,
+        2.1
+      ],
+      "dimensions": [
+        5.2,
+        9,
+        4.2
+      ],
+      "rotation_z_deg": -22,
+      "color_rgba": [
+        0.6,
+        0.32,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_BLOCK_L_S",
+      "location": [
+        18.152,
+        -15.774,
+        2.1
+      ],
+      "dimensions": [
+        5.2,
+        9,
+        4.2
+      ],
+      "rotation_z_deg": 158,
+      "color_rgba": [
+        0.6,
+        0.32,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_BLOCK_R_N",
+      "location": [
+        -11.848,
+        13.226,
+        2.1
+      ],
+      "dimensions": [
+        5.2,
+        9,
+        4.2
+      ],
+      "rotation_z_deg": -22,
+      "color_rgba": [
+        0.6,
+        0.32,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_BLOCK_R_S",
+      "location": [
+        11.848,
+        -13.226,
+        2.1
+      ],
+      "dimensions": [
+        5.2,
+        9,
+        4.2
+      ],
+      "rotation_z_deg": 158,
+      "color_rgba": [
+        0.6,
+        0.32,
+        0.24,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_CRATE_DOCK_A_N",
+      "location": [
+        -14.995,
+        21.185,
+        0.75
+      ],
+      "dimensions": [
+        2.2,
+        2.2,
+        1.5
+      ],
+      "rotation_z_deg": -10,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_CRATE_DOCK_A_S",
+      "location": [
+        14.995,
+        -21.185,
+        0.75
+      ],
+      "dimensions": [
+        2.2,
+        2.2,
+        1.5
+      ],
+      "rotation_z_deg": 170,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_CRATE_DOCK_B_N",
+      "location": [
+        -12.101,
+        20.339,
+        0.55
+      ],
+      "dimensions": [
+        1.6,
+        1.6,
+        1.1
+      ],
+      "rotation_z_deg": -30,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_CRATE_DOCK_B_S",
+      "location": [
+        12.101,
+        -20.339,
+        0.55
+      ],
+      "dimensions": [
+        1.6,
+        1.6,
+        1.1
+      ],
+      "rotation_z_deg": 150,
+      "color_rgba": [
+        0.58,
+        0.44,
+        0.28,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_RAMP_ROOF_N",
+      "location": [
+        -7.953,
+        11.653,
+        2.35
+      ],
+      "dimensions": [
+        2.6,
+        7,
+        4.7
+      ],
+      "rotation_z_deg": -22,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_RAMP_ROOF_S",
+      "location": [
+        7.953,
+        -11.653,
+        2.35
+      ],
+      "dimensions": [
+        2.6,
+        7,
+        4.7
+      ],
+      "rotation_z_deg": 158,
+      "color_rgba": [
+        0.68,
+        0.66,
+        0.62,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_ROOF_N",
+      "location": [
+        -15.0,
+        14.5,
+        4.45
+      ],
+      "dimensions": [
+        12.4,
+        9.4,
+        0.5
+      ],
+      "rotation_z_deg": -22,
+      "color_rgba": [
+        0.45,
+        0.28,
+        0.22,
+        1.0
+      ]
+    },
+    {
+      "name": "WAREHOUSE_ROOF_S",
+      "location": [
+        15.0,
+        -14.5,
+        4.45
+      ],
+      "dimensions": [
+        12.4,
+        9.4,
+        0.5
+      ],
+      "rotation_z_deg": 158,
+      "color_rgba": [
+        0.45,
+        0.28,
+        0.22,
+        1.0
+      ]
+    }
+  ]
+}

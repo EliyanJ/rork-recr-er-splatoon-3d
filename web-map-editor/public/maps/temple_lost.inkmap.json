@@ -1,0 +1,2540 @@
+{
+  "version": 1,
+  "name": "Temple Lost",
+  "ground": {
+    "shape": "rectangle",
+    "width": 72,
+    "depth": 44,
+    "radius": 30,
+    "points": [],
+    "color": "#3D4C38"
+  },
+  "blocks": [
+    {
+      "id": "solid_61",
+      "name": "Mur nord",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 0.8,
+        "z": -22.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 72.8,
+        "height": 1.6,
+        "depth": 0.4,
+        "radius": 0
+      },
+      "color": "#575C4C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 72.8,
+          "y": 1.6,
+          "z": 0.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_62",
+      "name": "Mur sud",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 0.8,
+        "z": 22.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 72.8,
+        "height": 1.6,
+        "depth": 0.4,
+        "radius": 0
+      },
+      "color": "#575C4C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 72.8,
+          "y": 1.6,
+          "z": 0.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_63",
+      "name": "Mur est",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 36.2,
+        "y": 0.8,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.4,
+        "height": 1.6,
+        "depth": 44.8,
+        "radius": 0
+      },
+      "color": "#575C4C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.4,
+          "y": 1.6,
+          "z": 44.8
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_64",
+      "name": "Mur ouest",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -36.2,
+        "y": 0.8,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.4,
+        "height": 1.6,
+        "depth": 44.8,
+        "radius": 0
+      },
+      "color": "#575C4C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.4,
+          "y": 1.6,
+          "z": 44.8
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn_65",
+      "name": "Spawn joueur (orange)",
+      "geometry": "cylinder",
+      "kind": "spawn",
+      "position": {
+        "x": -30,
+        "y": 0.03,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.4,
+        "height": 0.05,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#4FFF8E",
+      "opacity": 0.9,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 3.4,
+          "y": 0.05,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "spawn": {
+        "team": "a"
+      }
+    },
+    {
+      "id": "spawn_66",
+      "name": "Spawn adverse (violet)",
+      "geometry": "cylinder",
+      "kind": "spawn",
+      "position": {
+        "x": 30,
+        "y": 0.03,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.4,
+        "height": 0.05,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#4FFF8E",
+      "opacity": 0.9,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 3.4,
+          "y": 0.05,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "spawn": {
+        "team": "b"
+      }
+    },
+    {
+      "id": "solid_67",
+      "name": "Pyramide - base",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 1.0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 14,
+        "height": 2,
+        "depth": 10,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 14,
+          "y": 2,
+          "z": 10
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_68",
+      "name": "Pyramide - sanctuaire",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 2.25,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 7,
+        "height": 4.5,
+        "depth": 5,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 7,
+          "y": 4.5,
+          "z": 5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_69",
+      "name": "Escalier O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -9.5,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0.0,
+        "z": 21.8
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.385,
+        "height": 0.22,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.385164807134504,
+          "y": 0.22,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_70",
+      "name": "Escalier E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 9.5,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 180.0,
+        "z": 21.8
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.385,
+        "height": 0.22,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.385164807134504,
+          "y": 0.22,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_71",
+      "name": "Escalier sanctuaire N",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 3.25,
+        "z": -3.6
+      },
+      "rotation": {
+        "x": 0,
+        "y": -90.0,
+        "z": 46.17
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.466,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.4655446902326914,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_72",
+      "name": "Escalier sanctuaire S",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 3.25,
+        "z": 3.6
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90.0,
+        "z": 46.17
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.466,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.4655446902326914,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_73",
+      "name": "Canal nord",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 0,
+        "y": 0.03,
+        "z": -13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 20,
+        "height": 0.06,
+        "depth": 3.6,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 20,
+          "y": 0.06,
+          "z": 3.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_74",
+      "name": "Canal sud",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 0,
+        "y": 0.03,
+        "z": 13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 20,
+        "height": 0.06,
+        "depth": 3.6,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 20,
+          "y": 0.06,
+          "z": 3.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_75",
+      "name": "Bassin NO",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -28,
+        "y": 0.03,
+        "z": -15
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6.4,
+        "height": 0.06,
+        "depth": 6,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 6.4,
+          "y": 0.06,
+          "z": 6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_76",
+      "name": "Bassin SE",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 28,
+        "y": 0.03,
+        "z": 15
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6.4,
+        "height": 0.06,
+        "depth": 6,
+        "radius": 0
+      },
+      "color": "#1F3A66",
+      "opacity": 0.75,
+      "collision": {
+        "mode": "none",
+        "size": {
+          "x": 6.4,
+          "y": 0.06,
+          "z": 6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_77",
+      "name": "Ponton O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -7,
+        "y": 0.35,
+        "z": -13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3,
+        "height": 0.7,
+        "depth": 5.4,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3,
+          "y": 0.7,
+          "z": 5.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_78",
+      "name": "Rampe ponton O nord",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -7.0,
+        "y": 0.35,
+        "z": -16.55
+      },
+      "rotation": {
+        "x": 0,
+        "y": -90.0,
+        "z": 22.38
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.838,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.8384776310850228,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_79",
+      "name": "Rampe ponton O sud",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -7.0,
+        "y": 0.35,
+        "z": -9.45
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90.0,
+        "z": 22.38
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.838,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.8384776310850246,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_80",
+      "name": "Ponton E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 7,
+        "y": 0.35,
+        "z": 13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3,
+        "height": 0.7,
+        "depth": 5.4,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3,
+          "y": 0.7,
+          "z": 5.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_81",
+      "name": "Rampe ponton E sud",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 7.0,
+        "y": 0.35,
+        "z": 16.55
+      },
+      "rotation": {
+        "x": 0,
+        "y": 90.0,
+        "z": 22.38
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.838,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.8384776310850228,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_82",
+      "name": "Rampe ponton E nord",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 7.0,
+        "y": 0.35,
+        "z": 9.45
+      },
+      "rotation": {
+        "x": 0,
+        "y": -90.0,
+        "z": 22.38
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.838,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.8384776310850246,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_83",
+      "name": "Tour de guet O - sommet",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -18,
+        "y": 2.25,
+        "z": 10
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.5,
+        "height": 4.5,
+        "depth": 4.5,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.5,
+          "y": 4.5,
+          "z": 4.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_84",
+      "name": "Tour de guet O - palier",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -22.75,
+        "y": 1.1,
+        "z": 10.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_85",
+      "name": "Tour de guet O - rampe basse",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -27.45,
+        "y": 1.1,
+        "z": 10.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -0.0,
+        "z": 26.57
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.919,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.919349550499536,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_86",
+      "name": "Tour de guet O - rampe haute",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -22.05,
+        "y": 3.35,
+        "z": 10.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -0.0,
+        "z": 23.07
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.869,
+        "height": 0.22,
+        "depth": 2.2,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.869412236331674,
+          "y": 0.22,
+          "z": 2.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_87",
+      "name": "Tour de guet E - sommet",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 18,
+        "y": 2.25,
+        "z": -10
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.5,
+        "height": 4.5,
+        "depth": 4.5,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.5,
+          "y": 4.5,
+          "z": 4.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_88",
+      "name": "Tour de guet E - palier",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 22.75,
+        "y": 1.1,
+        "z": -10.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 3.4,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 3.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_89",
+      "name": "Tour de guet E - rampe basse",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 27.45,
+        "y": 1.1,
+        "z": -10.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -180.0,
+        "z": 26.57
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4.919,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4.919349550499536,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_90",
+      "name": "Tour de guet E - rampe haute",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 22.05,
+        "y": 3.35,
+        "z": -10.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -180.0,
+        "z": 23.07
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.869,
+        "height": 0.22,
+        "depth": 2.2,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.869412236331674,
+          "y": 0.22,
+          "z": 2.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_91",
+      "name": "Autel nord - sommet",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0,
+        "y": 1.5,
+        "z": -18.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 4,
+        "height": 3,
+        "depth": 4,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 4,
+          "y": 3,
+          "z": 4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_92",
+      "name": "Autel nord - palier",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": -22.7
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.4,
+        "height": 1.5,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.4,
+          "y": 1.5,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_93",
+      "name": "Autel nord - rampe basse",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": -26.7
+      },
+      "rotation": {
+        "x": 0,
+        "y": -90.0,
+        "z": 26.57
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3.354,
+        "height": 0.22,
+        "depth": 2.6,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3.3541019662496847,
+          "y": 0.22,
+          "z": 2.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_94",
+      "name": "Autel nord - rampe haute",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 0.0,
+        "y": 2.25,
+        "z": -22.0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -90.0,
+        "z": 15.52
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.604,
+        "height": 0.22,
+        "depth": 2.2,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.60446250768082,
+          "y": 0.22,
+          "z": 2.2
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_95",
+      "name": "Mur peignable O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -13,
+        "y": 1.5,
+        "z": -5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.6,
+        "height": 3,
+        "depth": 7,
+        "radius": 0
+      },
+      "color": "#999994",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.6,
+          "y": 3,
+          "z": 7
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_96",
+      "name": "Mur peignable E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 13,
+        "y": 1.5,
+        "z": 5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.6,
+        "height": 3,
+        "depth": 7,
+        "radius": 0
+      },
+      "color": "#999994",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.6,
+          "y": 3,
+          "z": 7
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_97",
+      "name": "Raccourci peignable N",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -7,
+        "y": 1.25,
+        "z": 8.4
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6,
+        "height": 2.5,
+        "depth": 0.6,
+        "radius": 0
+      },
+      "color": "#999994",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 6,
+          "y": 2.5,
+          "z": 0.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_98",
+      "name": "Raccourci peignable S",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 7,
+        "y": 1.25,
+        "z": -8.4
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 6,
+        "height": 2.5,
+        "depth": 0.6,
+        "radius": 0
+      },
+      "color": "#999994",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 6,
+          "y": 2.5,
+          "z": 0.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_99",
+      "name": "Sanctuaire ruine O - mur arriere",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -28.5,
+        "y": 1.1,
+        "z": 13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 4.4,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 4.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_100",
+      "name": "Sanctuaire ruine O - mur porte A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -23.5,
+        "y": 1.1,
+        "z": 11.475
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_101",
+      "name": "Sanctuaire ruine O - mur porte B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -23.5,
+        "y": 1.1,
+        "z": 14.525
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_102",
+      "name": "Sanctuaire ruine O - mur cote A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -26,
+        "y": 1.1,
+        "z": 10.8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_103",
+      "name": "Sanctuaire ruine O - mur cote B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -26,
+        "y": 1.1,
+        "z": 15.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_104",
+      "name": "Sanctuaire ruine O - toit",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": -26,
+        "y": 2.31,
+        "z": 13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.6,
+        "height": 0.22,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#FFCC40",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.6,
+          "y": 0.22,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_105",
+      "name": "Sanctuaire ruine E - mur arriere",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 28.5,
+        "y": 1.1,
+        "z": -13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 4.4,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 4.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_106",
+      "name": "Sanctuaire ruine E - mur porte A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 23.5,
+        "y": 1.1,
+        "z": -14.525
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_107",
+      "name": "Sanctuaire ruine E - mur porte B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 23.5,
+        "y": 1.1,
+        "z": -11.475
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 2.2,
+        "depth": 1.35,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 0.25,
+          "y": 2.2,
+          "z": 1.35
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_108",
+      "name": "Sanctuaire ruine E - mur cote A",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 26,
+        "y": 1.1,
+        "z": -15.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_109",
+      "name": "Sanctuaire ruine E - mur cote B",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 26,
+        "y": 1.1,
+        "z": -10.8
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.0,
+        "height": 2.2,
+        "depth": 0.25,
+        "radius": 0
+      },
+      "color": "#6B755C",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.0,
+          "y": 2.2,
+          "z": 0.25
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "cover_110",
+      "name": "Sanctuaire ruine E - toit",
+      "geometry": "box",
+      "kind": "cover",
+      "position": {
+        "x": 26,
+        "y": 2.31,
+        "z": -13
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 5.6,
+        "height": 0.22,
+        "depth": 5.0,
+        "radius": 0
+      },
+      "color": "#40F2D9",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 5.6,
+          "y": 0.22,
+          "z": 5.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_111",
+      "name": "Bloc de pierre N",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -10,
+        "y": 0.85,
+        "z": 15
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3,
+        "height": 1.7,
+        "depth": 1.5,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3,
+          "y": 1.7,
+          "z": 1.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_112",
+      "name": "Bloc de pierre S",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 10,
+        "y": 0.85,
+        "z": -15
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 3,
+        "height": 1.7,
+        "depth": 1.5,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 3,
+          "y": 1.7,
+          "z": 1.5
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_113",
+      "name": "Bloc de pierre O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -22,
+        "y": 0.75,
+        "z": -6
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.6,
+        "height": 1.5,
+        "depth": 3,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.6,
+          "y": 1.5,
+          "z": 3
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_114",
+      "name": "Bloc de pierre E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 22,
+        "y": 0.75,
+        "z": 6
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.6,
+        "height": 1.5,
+        "depth": 3,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.6,
+          "y": 1.5,
+          "z": 3
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_115",
+      "name": "Caisse NO",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -14,
+        "y": 0.7,
+        "z": 17
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.4,
+        "height": 1.4,
+        "depth": 1.4,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.4,
+          "y": 1.4,
+          "z": 1.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_116",
+      "name": "Caisse SE",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 14,
+        "y": 0.7,
+        "z": -17
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.4,
+        "height": 1.4,
+        "depth": 1.4,
+        "radius": 0
+      },
+      "color": "#858F75",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.4,
+          "y": 1.4,
+          "z": 1.4
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_117",
+      "name": "Caisse E",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": 26,
+        "y": 0.75,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.6,
+        "height": 1.5,
+        "depth": 1.6,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.6,
+          "y": 1.5,
+          "z": 1.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_118",
+      "name": "Caisse O",
+      "geometry": "box",
+      "kind": "solid",
+      "position": {
+        "x": -26,
+        "y": 0.75,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.6,
+        "height": 1.5,
+        "depth": 1.6,
+        "radius": 0
+      },
+      "color": "#5C6652",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.6,
+          "y": 1.5,
+          "z": 1.6
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_119",
+      "name": "Bidon de peinture O",
+      "geometry": "cylinder",
+      "kind": "solid",
+      "position": {
+        "x": -30,
+        "y": 0.5,
+        "z": -10
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "radius": 0
+      },
+      "color": "#40F2D9",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "solid_120",
+      "name": "Bidon de peinture E",
+      "geometry": "cylinder",
+      "kind": "solid",
+      "position": {
+        "x": 30,
+        "y": 0.5,
+        "z": 10
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "dimensions": {
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "radius": 0
+      },
+      "color": "#FFCC40",
+      "opacity": 1.0,
+      "collision": {
+        "mode": "auto",
+        "size": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    }
+  ]
+}
