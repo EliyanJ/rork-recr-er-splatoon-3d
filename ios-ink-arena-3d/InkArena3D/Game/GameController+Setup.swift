@@ -47,6 +47,19 @@ extension GameController {
         // VFX for the whole next match.
         liveTransientVFX = 0
 
+        // Warm the drop pool up front so a burst of fire never allocates a
+        // fresh entity mid-match. Each drop is parented once and left disabled
+        // until `spawnPaintDrop` acquires it.
+        dropPool.removeAll(keepingCapacity: true)
+        dropPool.reserveCapacity(projectileCap)
+        let warmMaterial = projectileMaterials[.orange] ?? UnlitMaterial(color: .white)
+        for _ in 0..<projectileCap {
+            let entity = ModelEntity(mesh: dropMesh, materials: [warmMaterial])
+            entity.isEnabled = false
+            root.addChild(entity)
+            dropPool.append(entity)
+        }
+
         mats = await ArenaMaterials.load()
         buildLights(root)
         if isTraining {

@@ -51,13 +51,23 @@ extension GameController {
         // Performance graphics preset halves the cap.
         if projectiles.count >= projectileCap {
             let oldest = projectiles.removeFirst()
-            oldest.entity.removeFromParent()
+            releaseDrop(oldest.entity)
         }
-        let entity = ModelEntity(mesh: dropMesh, materials: [material])
+        // Acquire from the pool if available (already parented to worldRoot),
+        // otherwise build once and parent permanently. Recycled entities keep
+        // their parenting — never re-`addChild` them.
+        let entity: ModelEntity
+        if let recycled = dropPool.popLast() {
+            entity = recycled
+            entity.model?.materials = [material] // team may differ from last use
+            entity.isEnabled = true
+        } else {
+            entity = ModelEntity(mesh: dropMesh, materials: [material])
+            worldRoot.addChild(entity)
+        }
         entity.position = origin
         entity.scale = SIMD3<Float>(0.85, 0.85, 3.6) * Float.random(in: 0.9...1.25) * dropScale
         entity.orientation = simd_quatf(from: [0, 0, 1], to: simd_normalize(direction))
-        worldRoot.addChild(entity)
         let velocity = direction * speed + SIMD3<Float>(0, 0.6, 0)
         projectiles.append(Projectile(
             entity: entity,
@@ -73,6 +83,19 @@ extension GameController {
         ))
     }
 
+    /// Returns a spent `.drop` entity to the pool: disabled and kept parented
+    /// to `worldRoot` so it can be re-acquired without a scene-graph mutation.
+    /// Only ever called with `.drop` projectiles, which are always
+    /// `ModelEntity`; a non-model entity is defensively just removed.
+    private func releaseDrop(_ entity: Entity) {
+        entity.isEnabled = false
+        if let model = entity as? ModelEntity {
+            dropPool.append(model)
+        } else {
+            entity.removeFromParent()
+        }
+    }
+
     func updateProjectiles(dt: Float, grid: PaintGrid) {
         guard !projectiles.isEmpty else { return }
         let halfW = GameConfig.arenaWidth / 2
@@ -86,7 +109,13 @@ extension GameController {
             var projectile = projectiles[index]
             let dead = stepProjectile(&projectile, dt: dt, halfW: halfW, halfD: halfD, grid: grid)
             if dead {
-                projectile.entity.removeFromParent()
+                // Pooled drops go back to the pool (kept parented, disabled);
+                // grenades are rare clones and keep the plain remove path.
+                if projectile.kind == .drop {
+                    releaseDrop(projectile.entity)
+                } else {
+                    projectile.entity.removeFromParent()
+                }
                 projectiles.swapAt(index, projectiles.count - 1)
                 projectiles.removeLast()
             } else {

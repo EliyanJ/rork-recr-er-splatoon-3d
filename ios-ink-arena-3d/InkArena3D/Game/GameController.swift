@@ -546,6 +546,11 @@ final class GameController {
     }
 
     var projectiles: [Projectile] = []
+    /// Reusable `.drop` entities parented ONCE to `worldRoot` and toggled via
+    /// `isEnabled` instead of created/destroyed per shot. A sustained jet
+    /// spawns ~50 drops/s; recycling from this pool removes the scene-graph
+    /// add/remove churn that was a steady combat CPU spike.
+    @ObservationIgnored var dropPool: [ModelEntity] = []
     let dropMesh = MeshResource.generateSphere(radius: 0.12)
     let grenadeMesh = MeshResource.generateSphere(radius: 0.21)
     var projectileMaterials: [Team: UnlitMaterial] = [:]
