@@ -13,7 +13,7 @@ extension GameController {
         // show the hit feedback only, the host's own copy of this projectile
         // applies the real damage on its authoritative roster.
         if isLocalDuel, bot.isNetPuppet {
-            botHitFeedback(bot, at: position, attacker: attacker)
+            botHitFeedback(bot, at: position, attacker: attacker, byPlayer: ownerIndex == 0)
             return
         }
         // Local duel: the puppet's real HP lives on the other device —
@@ -22,7 +22,7 @@ extension GameController {
         // projectiles are replayed on the guest and hurt it there (victim
         // authority), so forwarding those too would double the damage.
         if isLocalDuel, bot === remoteBot {
-            botHitFeedback(bot, at: position, attacker: attacker)
+            botHitFeedback(bot, at: position, attacker: attacker, byPlayer: ownerIndex == 0)
             if ownerIndex == 0 {
                 localMatch.send(.hit(damage: damage))
             }
@@ -35,7 +35,7 @@ extension GameController {
             bot.recentAttackers.insert(ownerIndex)
         }
         guard bot.hp <= 0 else {
-            botHitFeedback(bot, at: position, attacker: attacker)
+            botHitFeedback(bot, at: position, attacker: attacker, byPlayer: ownerIndex == 0)
             return
         }
         bot.isDown = true
@@ -52,8 +52,13 @@ extension GameController {
                 killer: netFighterRaw(forStatsIndex: ownerIndex)
             )))
         }
-        spawnKillExplosion(at: position, team: attacker)
-        AudioService.shared.playEnemySplat(volume: spatialVolume(1.0, at: position))
+        // Only the local player's own kills get the celebratory explosion.
+        // Every other kill (ally, bot vs bot, enemy) plays a lightened splat
+        // sound only — no VFX entities spawned for fights the player didn't win.
+        if ownerIndex == 0 {
+            spawnKillExplosion(at: position, team: attacker)
+        }
+        AudioService.shared.playEnemySplat(volume: spatialVolume(ownerIndex == 0 ? 1.0 : 0.4, at: position))
         if bot.team != localTeam, ownerIndex == 0, bot.statsIndex < liveStats.count {
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
             showSplatEvent(headline: "Vous avez noyé", name: liveStats[bot.statsIndex].name, isPlayerVictim: false)
@@ -69,14 +74,25 @@ extension GameController {
 
     /// Hit reaction on a surviving enemy: ink splash burst + squash flinch,
     /// throttled so the continuous jet doesn't spam animations.
-    func botHitFeedback(_ bot: BotAgent, at position: SIMD3<Float>, attacker: Team) {
+    ///
+    /// Only the local player's own hits (`byPlayer`) spawn the paint VFX — the
+    /// feedback the player needs to confirm their shot landed. Every other
+    /// combatant's hit (ally vs enemy, bot vs bot, enemy vs ally) plays only a
+    /// lightened impact sound, skipping the entity churn for fights the player
+    /// isn't the source of. The character's own flinch reaction is kept so
+    /// on-screen bots still visibly react when shot.
+    func botHitFeedback(_ bot: BotAgent, at position: SIMD3<Float>, attacker: Team, byPlayer: Bool) {
         guard bot.flinchTimer <= 0 else { return }
         bot.flinchTimer = GameConfig.hitFlinchCooldown
-        spawnHitSplash(
-            at: position + SIMD3<Float>(0, GameConfig.characterHeight * 0.55, 0),
-            team: attacker
-        )
-        AudioService.shared.playHit(volume: spatialVolume(0.8, at: position))
+        if byPlayer {
+            spawnHitSplash(
+                at: position + SIMD3<Float>(0, GameConfig.characterHeight * 0.55, 0),
+                team: attacker
+            )
+            AudioService.shared.playHit(volume: spatialVolume(0.8, at: position))
+        } else {
+            AudioService.shared.playHit(volume: spatialVolume(0.3, at: position))
+        }
         bot.animator.playOnce(bot.hitAnim, restoreAfter: .milliseconds(450))
 
         guard let visual = bot.container.findEntity(named: "generated_model_runtime") else { return }

@@ -206,8 +206,12 @@ extension GameController {
             : bot.team.opponent
         grid?.paint(atX: pos.x, z: pos.z, radius: GameConfig.killPaintRadius, team: paintTeam)
         recordKill(victimIndex: bot.statsIndex, killerIndex: killerIndex, attackers: [])
-        spawnKillExplosion(at: pos, team: paintTeam)
-        AudioService.shared.playEnemySplat(volume: spatialVolume(1.0, at: pos))
+        // Only the local player's own kills get the explosion VFX; every other
+        // kill plays a lightened splat sound only.
+        if killerIndex == 0 {
+            spawnKillExplosion(at: pos, team: paintTeam)
+        }
+        AudioService.shared.playEnemySplat(volume: spatialVolume(killerIndex == 0 ? 1.0 : 0.4, at: pos))
         if killerIndex == 0, bot.statsIndex < liveStats.count {
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
             showSplatEvent(headline: "Vous avez noyé", name: liveStats[bot.statsIndex].name, isPlayerVictim: false)
