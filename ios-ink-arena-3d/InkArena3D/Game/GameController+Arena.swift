@@ -7,109 +7,125 @@ import simd
 /// Arena & decor construction: floor, walls, platforms, ramps, water,
 /// ziplines and set dressing. Verbatim from `GameController`.
 extension GameController {
+    /// Emits an opaque static box: merged into the arena batcher when active
+    /// (the two real maps), else a standalone entity (training / fallback).
+    /// `cornerRadius` is applied only on the standalone path — merged boxes
+    /// drop corner rounding (visually negligible on multi-metre blocks).
+    func addStaticBox(
+        _ root: Entity,
+        size: SIMD3<Float>,
+        position: SIMD3<Float>,
+        orientation: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0]),
+        spec: StaticArenaBatcher.MaterialSpec,
+        uvScale: SIMD2<Float> = [1, 1],
+        cornerRadius: Float = 0
+    ) {
+        if let batcher = arenaBatcher {
+            batcher.addBox(
+                size: size,
+                transform: Transform(rotation: orientation, translation: position),
+                spec: spec,
+                uvScale: uvScale
+            )
+        } else {
+            let entity = ModelEntity(
+                mesh: .generateBox(size: size, cornerRadius: cornerRadius),
+                materials: [spec.makeMaterial(mats: mats, tilingScale: uvScale)]
+            )
+            entity.position = position
+            entity.orientation = orientation
+            root.addChild(entity)
+        }
+    }
+
+    /// Emits an opaque static Y-axis cylinder: merged when the batcher is
+    /// active, else a standalone entity.
+    func addStaticCylinder(
+        _ root: Entity,
+        height: Float,
+        radius: Float,
+        position: SIMD3<Float>,
+        spec: StaticArenaBatcher.MaterialSpec
+    ) {
+        if let batcher = arenaBatcher {
+            batcher.addCylinder(
+                height: height,
+                radius: radius,
+                transform: Transform(translation: position),
+                spec: spec
+            )
+        } else {
+            let entity = ModelEntity(
+                mesh: .generateCylinder(height: height, radius: radius),
+                materials: [spec.makeMaterial(mats: mats, tilingScale: [1, 1])]
+            )
+            entity.position = position
+            root.addChild(entity)
+        }
+    }
+
     func buildArena(_ root: Entity) {
         let halfW = GameConfig.arenaWidth / 2
         let halfD = GameConfig.arenaDepth / 2
+        // Fuse all opaque static arena geometry into a handful of merged
+        // entities (one per material) instead of ~200-300 separate draw calls.
+        arenaBatcher = StaticArenaBatcher()
 
         // Map ground: worn asphalt at the docks, mossy stone slabs at the
         // temple, waxed factory concrete at the dairy.
-        let floorFallback = floorFallbackColor
-        let floorMaterial = mats?.pbr(
-            floorTextureName,
-            roughness: 0.8,
-            scale: floorTextureScale,
-            fallback: floorFallback
-        ) ?? SimpleMaterial(color: floorFallback, roughness: 0.75, isMetallic: false)
-        let floor = ModelEntity(
-            mesh: .generateBox(size: [GameConfig.arenaWidth, 0.2, GameConfig.arenaDepth]),
-            materials: [floorMaterial]
+        addStaticBox(
+            root,
+            size: [GameConfig.arenaWidth, 0.2, GameConfig.arenaDepth],
+            position: [0, -0.1, 0],
+            spec: .pbr(texture: floorTextureName, tint: .white, roughness: 0.8, fallback: floorFallbackColor),
+            uvScale: floorTextureScale
         )
-        floor.position = [0, -0.1, 0]
-        root.addChild(floor)
 
         // Tinted apron around the arena — no dark void. Sunset warmth at the
         // docks, deep jungle green at the temple, wheat gold at the dairy.
-        let apronTint = apronTintColor
-        let apronFallback = apronFallbackColor
-        let apronMaterial = mats?.pbr(
-            floorTextureName,
-            tint: apronTint,
-            roughness: 0.9,
-            scale: [22, 22],
-            fallback: apronFallback
-        ) ?? SimpleMaterial(color: apronFallback, roughness: 0.9, isMetallic: false)
-        let apron = ModelEntity(mesh: .generateBox(size: [170, 0.2, 170]), materials: [apronMaterial])
-        apron.position = [0, -0.22, 0]
-        root.addChild(apron)
+        addStaticBox(
+            root,
+            size: [170, 0.2, 170],
+            position: [0, -0.22, 0],
+            spec: .pbr(texture: floorTextureName, tint: apronTintColor, roughness: 0.9, fallback: apronFallbackColor),
+            uvScale: [22, 22]
+        )
 
         // Spawn pads under each base.
-        let mainPad = ModelEntity(
-            mesh: .generateCylinder(height: 0.05, radius: 1.7),
-            materials: [UnlitMaterial(color: localTeam.uiColor.withAlphaComponent(0.9))]
-        )
-        mainPad.position = [playerHome.x, 0.055, playerHome.z]
-        root.addChild(mainPad)
+        addStaticCylinder(root, height: 0.05, radius: 1.7, position: [playerHome.x, 0.055, playerHome.z], spec: .unlit(localTeam.uiColor.withAlphaComponent(0.9)))
         if isLocalDuel {
-            let remotePad = ModelEntity(
-                mesh: .generateCylinder(height: 0.05, radius: 1.7),
-                materials: [UnlitMaterial(color: enemyTeam.uiColor.withAlphaComponent(0.9))]
-            )
-            remotePad.position = [remoteHome.x, 0.055, remoteHome.z]
-            root.addChild(remotePad)
+            addStaticCylinder(root, height: 0.05, radius: 1.7, position: [remoteHome.x, 0.055, remoteHome.z], spec: .unlit(enemyTeam.uiColor.withAlphaComponent(0.9)))
         } else {
             for home in allyHomes {
-                let pad = ModelEntity(
-                    mesh: .generateCylinder(height: 0.05, radius: 1.3),
-                    materials: [UnlitMaterial(color: Team.orange.uiColor.withAlphaComponent(0.9))]
-                )
-                pad.position = [home.x, 0.055, home.z]
-                root.addChild(pad)
+                addStaticCylinder(root, height: 0.05, radius: 1.3, position: [home.x, 0.055, home.z], spec: .unlit(Team.orange.uiColor.withAlphaComponent(0.9)))
             }
             for home in enemyHomes {
-                let pad = ModelEntity(
-                    mesh: .generateCylinder(height: 0.05, radius: 1.3),
-                    materials: [UnlitMaterial(color: Team.purple.uiColor.withAlphaComponent(0.9))]
-                )
-                pad.position = [home.x, 0.055, home.z]
-                root.addChild(pad)
+                addStaticCylinder(root, height: 0.05, radius: 1.3, position: [home.x, 0.055, home.z], spec: .unlit(Team.purple.uiColor.withAlphaComponent(0.9)))
             }
         }
 
         // Perimeter walls — graffiti concrete at the docks, mossy carved
         // stone at the temple.
-        let wallFallback = wallFallbackColor
-        let wallMaterial = mats?.pbr(
-            perimeterTextureName,
-            roughness: 0.65,
-            scale: [7, 1],
-            fallback: wallFallback
-        ) ?? SimpleMaterial(color: wallFallback, roughness: 0.5, isMetallic: false)
+        let wallSpec: StaticArenaBatcher.MaterialSpec = .pbr(texture: perimeterTextureName, tint: .white, roughness: 0.65, fallback: wallFallbackColor)
         let wallHeight: Float = 1.6
         let thickness: Float = 0.4
 
         let horizontalWallSize: SIMD3<Float> = [GameConfig.arenaWidth + 0.8, wallHeight, thickness]
         let verticalWallSize: SIMD3<Float> = [thickness, wallHeight, GameConfig.arenaDepth + 0.8]
 
-        let north = ModelEntity(mesh: .generateBox(size: horizontalWallSize), materials: [wallMaterial])
-        north.position = [0, wallHeight / 2, -halfD - thickness / 2]
-        root.addChild(north)
-
-        let south = ModelEntity(mesh: .generateBox(size: horizontalWallSize), materials: [wallMaterial])
-        south.position = [0, wallHeight / 2, halfD + thickness / 2]
-        root.addChild(south)
-
-        let east = ModelEntity(mesh: .generateBox(size: verticalWallSize), materials: [wallMaterial])
-        east.position = [halfW + thickness / 2, wallHeight / 2, 0]
-        root.addChild(east)
-
-        let west = ModelEntity(mesh: .generateBox(size: verticalWallSize), materials: [wallMaterial])
-        west.position = [-halfW - thickness / 2, wallHeight / 2, 0]
-        root.addChild(west)
+        addStaticBox(root, size: horizontalWallSize, position: [0, wallHeight / 2, -halfD - thickness / 2], spec: wallSpec, uvScale: [7, 1])
+        addStaticBox(root, size: horizontalWallSize, position: [0, wallHeight / 2, halfD + thickness / 2], spec: wallSpec, uvScale: [7, 1])
+        addStaticBox(root, size: verticalWallSize, position: [halfW + thickness / 2, wallHeight / 2, 0], spec: wallSpec, uvScale: [7, 1])
+        addStaticBox(root, size: verticalWallSize, position: [-halfW - thickness / 2, wallHeight / 2, 0], spec: wallSpec, uvScale: [7, 1])
 
         switch GameConfig.currentMap {
         case .nexusDocks: buildNexusDocksLayout(root)
         case .templeLost: buildTempleLostLayout(root)
         }
+
+        // Flush every accumulated opaque primitive to merged entities.
+        arenaBatcher?.build(into: root, mats: mats)
+        arenaBatcher = nil
     }
 
     func buildNexusDocksLayout(_ root: Entity) {
@@ -346,11 +362,7 @@ extension GameController {
         root.addChild(water)
 
         // Dark rim so the pool reads as a drop in the dock floor.
-        let rimMaterial = SimpleMaterial(
-            color: UIColor(red: 0.1, green: 0.12, blue: 0.2, alpha: 1),
-            roughness: 0.6,
-            isMetallic: false
-        )
+        let rimColor = UIColor(red: 0.1, green: 0.12, blue: 0.2, alpha: 1)
         let rimHeight: Float = 0.16
         let rimThickness: Float = 0.22
         let rims: [(SIMD3<Float>, SIMD3<Float>)] = [
@@ -360,9 +372,13 @@ extension GameController {
             ([rimThickness, rimHeight, halfZ * 2], [-(halfX + rimThickness / 2), 0, 0]),
         ]
         for (size, offset) in rims {
-            let rim = ModelEntity(mesh: .generateBox(size: size, cornerRadius: 0.04), materials: [rimMaterial])
-            rim.position = SIMD3<Float>(center.x, rimHeight / 2, center.y) + offset
-            root.addChild(rim)
+            addStaticBox(
+                root,
+                size: size,
+                position: SIMD3<Float>(center.x, rimHeight / 2, center.y) + offset,
+                spec: .simple(color: rimColor, roughness: 0.6, metallic: false),
+                cornerRadius: 0.04
+            )
         }
     }
 
@@ -372,21 +388,24 @@ extension GameController {
 
         let cableColor = UIColor(red: 1, green: 0.85, blue: 0.3, alpha: 1)
         let span = simd_distance(start, end)
-        let cable = ModelEntity(
-            mesh: .generateBox(size: [span, 0.07, 0.07]),
-            materials: [UnlitMaterial(color: cableColor)]
+        addStaticBox(
+            root,
+            size: [span, 0.07, 0.07],
+            position: (start + end) / 2,
+            orientation: simd_quatf(from: [1, 0, 0], to: simd_normalize(end - start)),
+            spec: .unlit(cableColor)
         )
-        cable.position = (start + end) / 2
-        cable.orientation = simd_quatf(from: [1, 0, 0], to: simd_normalize(end - start))
-        root.addChild(cable)
 
         for endpoint in [start, end] {
-            let post = ModelEntity(
-                mesh: .generateCylinder(height: 2.8, radius: 0.09),
-                materials: [SimpleMaterial(color: UIColor(white: 0.25, alpha: 1), roughness: 0.4, isMetallic: true)]
+            addStaticCylinder(
+                root,
+                height: 2.8,
+                radius: 0.09,
+                position: [endpoint.x, endpoint.y - 1.3, endpoint.z],
+                spec: .simple(color: UIColor(white: 0.25, alpha: 1), roughness: 0.4, metallic: true)
             )
-            post.position = [endpoint.x, endpoint.y - 1.3, endpoint.z]
-            root.addChild(post)
+            // Pulley spheres stay standalone (the batcher fuses boxes/cylinders
+            // only); 4 total is negligible.
             let pulley = ModelEntity(mesh: .generateSphere(radius: 0.16), materials: [UnlitMaterial(color: cableColor)])
             pulley.position = endpoint
             root.addChild(pulley)
@@ -404,16 +423,19 @@ extension GameController {
     /// and a glowing footprint ring on the ground so players can spot
     /// exactly where it's planted while running around it.
     func addClimbWall(_ root: Entity, center: SIMD2<Float>, size: SIMD3<Float>, neon: UIColor) {
-        let material = mats?.pbr(
-            platformTextureName,
-            tint: UIColor(white: 0.62, alpha: 1),
-            roughness: 0.55,
-            scale: [2, 1.4],
-            fallback: UIColor(red: 0.58, green: 0.56, blue: 0.62, alpha: 1)
-        ) ?? SimpleMaterial(color: UIColor(red: 0.58, green: 0.56, blue: 0.62, alpha: 1), roughness: 0.5, isMetallic: false)
-        let wall = ModelEntity(mesh: .generateBox(size: size, cornerRadius: 0.05), materials: [material])
-        wall.position = [center.x, size.y / 2, center.y]
-        root.addChild(wall)
+        addStaticBox(
+            root,
+            size: size,
+            position: [center.x, size.y / 2, center.y],
+            spec: .pbr(
+                texture: platformTextureName,
+                tint: UIColor(white: 0.62, alpha: 1),
+                roughness: 0.55,
+                fallback: UIColor(red: 0.58, green: 0.56, blue: 0.62, alpha: 1)
+            ),
+            uvScale: [2, 1.4],
+            cornerRadius: 0.05
+        )
         obstacles.append(Obstacle(
             center: [center.x, 0, center.y],
             halfX: size.x / 2,
@@ -423,12 +445,12 @@ extension GameController {
             isWalkable: true
         ))
 
-        let edge = ModelEntity(
-            mesh: .generateBox(size: [size.x + 0.08, 0.22, size.z + 0.08]),
-            materials: [UnlitMaterial(color: neon)]
+        addStaticBox(
+            root,
+            size: [size.x + 0.08, 0.22, size.z + 0.08],
+            position: [center.x, size.y - 0.11, center.y],
+            spec: .unlit(neon)
         )
-        edge.position = [center.x, size.y - 0.11, center.y]
-        root.addChild(edge)
 
         // Full-height glowing corner posts -- the top-edge glow alone is
         // only visible from a distance/above; these read from any angle up
@@ -443,23 +465,24 @@ extension GameController {
             [halfX - postThickness / 2, halfZ - postThickness / 2],
         ]
         for offset in cornerOffsets {
-            let post = ModelEntity(
-                mesh: .generateBox(size: [postThickness, size.y + 0.04, postThickness]),
-                materials: [UnlitMaterial(color: neon)]
+            addStaticBox(
+                root,
+                size: [postThickness, size.y + 0.04, postThickness],
+                position: [center.x + offset.x, size.y / 2, center.y + offset.y],
+                spec: .unlit(neon)
             )
-            post.position = [center.x + offset.x, size.y / 2, center.y + offset.y]
-            root.addChild(post)
         }
 
         // Glowing footprint ring on the ground so the wall's exact
         // placement reads clearly at a glance, even from far away or from
         // above (top-down minimap-style readability).
-        let ring = ModelEntity(
-            mesh: .generateBox(size: [size.x + 0.5, 0.03, size.z + 0.5], cornerRadius: 0.08),
-            materials: [UnlitMaterial(color: neon.withAlphaComponent(0.85))]
+        addStaticBox(
+            root,
+            size: [size.x + 0.5, 0.03, size.z + 0.5],
+            position: [center.x, 0.02, center.y],
+            spec: .unlit(neon.withAlphaComponent(0.85)),
+            cornerRadius: 0.08
         )
-        ring.position = [center.x, 0.02, center.y]
-        root.addChild(ring)
 
         registerClimbSurface(center: center, halfX: size.x / 2, halfZ: size.z / 2, topY: size.y)
     }
@@ -475,26 +498,27 @@ extension GameController {
     func addContainer(_ root: Entity, center: SIMD2<Float>, size: SIMD3<Float>, color: UIColor, neon: UIColor) {
         addObstacleBox(root, center: [center.x, 0, center.y], size: size, color: color)
         let alongX = size.x >= size.z
-        let stripe = ModelEntity(
-            mesh: .generateBox(size: [
+        addStaticBox(
+            root,
+            size: [
                 alongX ? size.x * 0.85 : size.x + 0.06,
                 0.14,
                 alongX ? size.z + 0.06 : size.z * 0.85,
-            ]),
-            materials: [UnlitMaterial(color: neon)]
+            ],
+            position: [center.x, size.y * 0.72, center.y],
+            spec: .unlit(neon)
         )
-        stripe.position = [center.x, size.y * 0.72, center.y]
-        root.addChild(stripe)
     }
 
     /// Futuristic tree: dark trunk plus glowing geometric foliage blocks.
     func addNeoTree(_ root: Entity, at position: SIMD2<Float>, foliage: UIColor) {
-        let trunk = ModelEntity(
-            mesh: .generateCylinder(height: 2.2, radius: 0.18),
-            materials: [SimpleMaterial(color: UIColor(red: 0.16, green: 0.14, blue: 0.2, alpha: 1), roughness: 0.7, isMetallic: false)]
+        addStaticCylinder(
+            root,
+            height: 2.2,
+            radius: 0.18,
+            position: [position.x, 1.1, position.y],
+            spec: .simple(color: UIColor(red: 0.16, green: 0.14, blue: 0.2, alpha: 1), roughness: 0.7, metallic: false)
         )
-        trunk.position = [position.x, 1.1, position.y]
-        root.addChild(trunk)
         obstacles.append(Obstacle(
             center: [position.x, 0, position.y],
             halfX: 0.35,
@@ -540,18 +564,14 @@ extension GameController {
 
     func addObstacleBox(_ root: Entity, center: SIMD3<Float>, size: SIMD3<Float>, color: UIColor) {
         // Painted container metal at the docks, carved mossy stone at the temple.
-        let material = mats?.pbr(
-            blockTextureName,
-            roughness: 0.55,
-            scale: [max(1, (size.x / 3).rounded()), 1],
-            fallback: color
-        ) ?? SimpleMaterial(color: color, roughness: 0.5, isMetallic: false)
-        let entity = ModelEntity(
-            mesh: .generateBox(size: size, cornerRadius: 0.06),
-            materials: [material]
+        addStaticBox(
+            root,
+            size: size,
+            position: [center.x, size.y / 2, center.z],
+            spec: .pbr(texture: blockTextureName, tint: .white, roughness: 0.55, fallback: color),
+            uvScale: [max(1, (size.x / 3).rounded()), 1],
+            cornerRadius: 0.06
         )
-        entity.position = [center.x, size.y / 2, center.z]
-        root.addChild(entity)
         obstacles.append(Obstacle(
             center: [center.x, 0, center.z],
             halfX: size.x / 2,
@@ -575,25 +595,21 @@ extension GameController {
     ) {
         // Docks: industrial concrete with neon seams. Temple: ancient walls
         // veined with glowing tech lines.
-        let material = mats?.pbr(
-            platformTextureName,
-            roughness: 0.6,
-            scale: [max(1, (width / 4).rounded()), max(1, (height / 3).rounded())],
-            fallback: color
-        ) ?? SimpleMaterial(color: color, roughness: 0.55, isMetallic: false)
-        let entity = ModelEntity(
-            mesh: .generateBox(size: [width, height, depth], cornerRadius: 0.05),
-            materials: [material]
+        addStaticBox(
+            root,
+            size: [width, height, depth],
+            position: [center.x, height / 2, center.y],
+            spec: .pbr(texture: platformTextureName, tint: .white, roughness: 0.6, fallback: color),
+            uvScale: [max(1, (width / 4).rounded()), max(1, (height / 3).rounded())],
+            cornerRadius: 0.05
         )
-        entity.position = [center.x, height / 2, center.y]
-        root.addChild(entity)
 
-        let strip = ModelEntity(
-            mesh: .generateBox(size: [width + 0.06, 0.12, depth + 0.06]),
-            materials: [UnlitMaterial(color: trim)]
+        addStaticBox(
+            root,
+            size: [width + 0.06, 0.12, depth + 0.06],
+            position: [center.x, height - 0.28, center.y],
+            spec: .unlit(trim)
         )
-        strip.position = [center.x, height - 0.28, center.y]
-        root.addChild(strip)
 
         obstacles.append(Obstacle(
             center: [center.x, 0, center.y],
@@ -623,21 +639,16 @@ extension GameController {
         let slopeLength = sqrt(length * length + rise * rise)
 
         // Docks: perforated metal gangway. Temple: weathered wooden planks.
-        let material = mats?.pbr(
-            rampTextureName,
-            roughness: 0.5,
-            scale: [max(1, (slopeLength / 2.4).rounded()), 1],
-            fallback: color
-        ) ?? SimpleMaterial(color: color, roughness: 0.6, isMetallic: false)
-        let entity = ModelEntity(
-            mesh: .generateBox(size: [slopeLength, 0.22, width]),
-            materials: [material]
-        )
         let yaw = atan2(-dz, dx)
         let pitch = atan2(rise, length)
-        entity.orientation = simd_quatf(angle: yaw, axis: [0, 1, 0]) * simd_quatf(angle: pitch, axis: [0, 0, 1])
-        entity.position = [(low.x + high.x) / 2, (low.y + high.y) / 2 - 0.06, (low.z + high.z) / 2]
-        root.addChild(entity)
+        addStaticBox(
+            root,
+            size: [slopeLength, 0.22, width],
+            position: [(low.x + high.x) / 2, (low.y + high.y) / 2 - 0.06, (low.z + high.z) / 2],
+            orientation: simd_quatf(angle: yaw, axis: [0, 1, 0]) * simd_quatf(angle: pitch, axis: [0, 0, 1]),
+            spec: .pbr(texture: rampTextureName, tint: .white, roughness: 0.5, fallback: color),
+            uvScale: [max(1, (slopeLength / 2.4).rounded()), 1]
+        )
 
         ramps.append(Ramp(
             center: SIMD2<Float>((low.x + high.x) / 2, (low.z + high.z) / 2),
@@ -663,17 +674,10 @@ extension GameController {
         let height: Float = 2.2
         let thickness: Float = 0.25
         let doorWidth: Float = 1.7
-        let wallMaterial = mats?.pbr(
-            perimeterTextureName,
-            roughness: 0.65,
-            scale: [1.4, 1],
-            fallback: wallColor
-        ) ?? SimpleMaterial(color: wallColor, roughness: 0.65, isMetallic: false)
+        let wallSpec: StaticArenaBatcher.MaterialSpec = .pbr(texture: perimeterTextureName, tint: .white, roughness: 0.65, fallback: wallColor)
 
         func wall(size: SIMD3<Float>, at position: SIMD3<Float>) {
-            let entity = ModelEntity(mesh: .generateBox(size: size), materials: [wallMaterial])
-            entity.position = position
-            root.addChild(entity)
+            addStaticBox(root, size: size, position: position, spec: wallSpec, uvScale: [1.4, 1])
             obstacles.append(Obstacle(
                 center: [position.x, 0, position.z],
                 halfX: size.x / 2,
@@ -696,12 +700,13 @@ extension GameController {
         wall(size: [width, height, thickness], at: [center.x, height / 2, center.y + depth / 2])
 
         // Roof slab with an overhang; above head height, so the inside is playable.
-        let roof = ModelEntity(
-            mesh: .generateBox(size: [width + 0.6, 0.22, depth + 0.6], cornerRadius: 0.05),
-            materials: [SimpleMaterial(color: roofColor, roughness: 0.5, isMetallic: false)]
+        addStaticBox(
+            root,
+            size: [width + 0.6, 0.22, depth + 0.6],
+            position: [center.x, height + 0.11, center.y],
+            spec: .simple(color: roofColor, roughness: 0.5, metallic: false),
+            cornerRadius: 0.05
         )
-        roof.position = [center.x, height + 0.11, center.y]
-        root.addChild(roof)
         obstacles.append(Obstacle(
             center: [center.x, 0, center.y],
             halfX: (width + 0.6) / 2,
@@ -721,19 +726,21 @@ extension GameController {
     }
 
     func addPaintCan(_ root: Entity, at position: SIMD3<Float>, color: UIColor) {
-        let can = ModelEntity(
-            mesh: .generateCylinder(height: 1.0, radius: 0.45),
-            materials: [SimpleMaterial(color: color, roughness: 0.35, isMetallic: false)]
+        addStaticCylinder(
+            root,
+            height: 1.0,
+            radius: 0.45,
+            position: [position.x, 0.5, position.z],
+            spec: .simple(color: color, roughness: 0.35, metallic: false)
         )
-        can.position = [position.x, 0.5, position.z]
-        root.addChild(can)
 
-        let lid = ModelEntity(
-            mesh: .generateCylinder(height: 0.08, radius: 0.47),
-            materials: [SimpleMaterial(color: .white, roughness: 0.3, isMetallic: false)]
+        addStaticCylinder(
+            root,
+            height: 0.08,
+            radius: 0.47,
+            position: [position.x, 1.02, position.z],
+            spec: .simple(color: .white, roughness: 0.3, metallic: false)
         )
-        lid.position = [position.x, 1.02, position.z]
-        root.addChild(lid)
 
         obstacles.append(Obstacle(
             center: [position.x, 0, position.z],
