@@ -10,8 +10,10 @@ extension GameController {
     func buildPlayer(_ root: Entity) async {
         let skin = ProfileStore.shared.selectedSkin
         let spec = skin.spec
+        // The animatable body is the rigged idle clip — the static skin mesh
+        // carries no skeleton, so animations would have nothing to bind to.
         let container = await makeGeneratedModelContainer(
-            resourceName: spec.resourceName,
+            resourceName: skin.bodyResource ?? spec.resourceName,
             targetSize: GameConfig.characterHeight,
             anchor: .bottom,
             localFrontAxis: spec.localFrontAxis,
@@ -382,8 +384,10 @@ extension GameController {
         // Load all four fighter/weapon templates concurrently — they are
         // independent decodes, so waiting for them in parallel roughly halves
         // the roster load time versus the previous serial chain.
-        async let heroTemplateLoad = Self.loadTemplate(heroSpec.resourceName)
-        async let rivalTemplateLoad = Self.loadTemplate(rivalSpec.resourceName)
+        // Rigged idle clips double as the animatable bodies (the static base
+        // meshes have no skeleton — animations bind to the clip's rig).
+        async let heroTemplateLoad = Self.loadTemplate(ModelCatalog.heroBody ?? heroSpec.resourceName)
+        async let rivalTemplateLoad = Self.loadTemplate(ModelCatalog.rivalBody ?? rivalSpec.resourceName)
         async let blasterTemplateLoad = Self.loadTemplate(ModelCatalog.blaster.resourceName)
         // Every match fields at least one designated sniper bot on the rival
         // side — it carries the charger and hunts elevated vantage points.

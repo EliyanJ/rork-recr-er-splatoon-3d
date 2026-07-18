@@ -9,6 +9,15 @@ enum ModelCatalog {
         let localUpAxis: GeneratedModelAxis
     }
 
+    // NOTE: the three base character models (`stylized_cartoon_urban_warrior_character`,
+    // `urban_paint_warrior`, `cartoon_paint_warrior`) are STATIC meshes with no
+    // skeleton — the 24-joint rig lives only inside the `-anim-*` clip files.
+    // A character's animatable body is therefore its `-anim-idle` clip (a fully
+    // rigged, textured model), NOT the static base file. The base specs are kept
+    // only for orientation metadata and the procedural fallback.
+    // IMPORTANT: never strip the mesh/texture out of any `-anim-idle` file — it
+    // doubles as the rigged body. Other clips may be mesh-stripped safely.
+
     static let hero = GeneratedModelSpec(
         resourceName: "stylized_cartoon_urban_warrior_character",
         localFrontAxis: .positiveZ,
@@ -70,6 +79,12 @@ enum ModelCatalog {
         localUpAxis: .positiveY
     )
 
+    /// Rigged, textured body used as the hero's animatable model (the static
+    /// base mesh carries no skeleton).
+    static var heroBody: String? { heroIdle }
+    /// Rigged, textured body used for rival bots.
+    static var rivalBody: String? { rivalIdle }
+
     static let heroIdle: String? = "stylized_cartoon_urban_warrior_character-anim-idle"
     static let heroDraw: String? = "stylized_cartoon_urban_warrior_character-anim-cowboy-quick-draw-shooting"
     static let heroFire: String? = "stylized_cartoon_urban_warrior_character-anim-rifle-charge-inplace"
@@ -123,6 +138,10 @@ enum ModelCatalog {
         }
 
         private var prefix: String? { spec.resourceName }
+
+        /// Rigged, textured body for this skin — the idle clip doubles as the
+        /// animatable base model since the static skin mesh has no skeleton.
+        var bodyResource: String? { idleAnim }
 
         var idleAnim: String? { self == .classic ? ModelCatalog.heroIdle : prefix.map { "\($0)-anim-idle" } }
         var runAnim: String? { self == .classic ? ModelCatalog.heroRun : prefix.map { "\($0)-anim-run-fast-3-inplace" } }

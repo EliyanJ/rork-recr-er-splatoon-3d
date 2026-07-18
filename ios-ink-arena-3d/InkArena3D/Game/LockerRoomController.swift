@@ -68,8 +68,10 @@ final class LockerRoomController {
 
         let skin = ProfileStore.shared.selectedSkin
         let spec = skin.spec
+        // Rigged idle clip as the body so the idle animation actually plays
+        // (the static skin mesh has no skeleton).
         let container = await makeGeneratedModelContainer(
-            resourceName: spec.resourceName,
+            resourceName: skin.bodyResource ?? spec.resourceName,
             targetSize: GameConfig.characterHeight * 0.82,
             anchor: .bottom,
             localFrontAxis: spec.localFrontAxis,
