@@ -201,9 +201,6 @@ final class GameController {
     @ObservationIgnored var mats: ArenaMaterials?
     /// Active only while `buildArena` runs on the two real maps: the static
     /// opaque geometry helpers (`addStaticBox`/`addStaticCylinder`) accumulate
-    /// into it and it is flushed to a few merged entities at the end of the
-    /// build. Nil during training (which keeps the legacy per-entity path).
-    @ObservationIgnored var arenaBatcher: StaticArenaBatcher?
     var updateSubscription: EventSubscription?
     /// Published once the whole arena (models, bots, grid) is built — the
     /// loading overlay waits on this before starting its countdown.
