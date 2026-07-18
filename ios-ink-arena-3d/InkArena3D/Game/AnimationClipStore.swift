@@ -50,7 +50,15 @@ final class AnimationClipStore {
             guard let entity = try? await Entity(named: name) else { return }
             guard let anim = entity.availableAnimations.first else { return }
             clips[name] = anim
-            jointSignatures[name] = Self.findSkinnedModel(in: entity)?.jointNames ?? []
+            // Only record a signature when the clip still carries a skinned
+            // mesh. Production clips are stripped to skeleton + animation only
+            // (see tools/strip_anim_usdz.py), so they expose no skinned model
+            // and no signature — the rig-match check then simply trusts them
+            // (a stripped clip is derived from the correct source and can't
+            // carry the wrong rig). Un-stripped dev clips still get validated.
+            if let joints = Self.findSkinnedModel(in: entity)?.jointNames {
+                jointSignatures[name] = joints
+            }
             // `entity` (mesh + skeleton + texture) is released here; only the
             // AnimationResource survives.
         }
