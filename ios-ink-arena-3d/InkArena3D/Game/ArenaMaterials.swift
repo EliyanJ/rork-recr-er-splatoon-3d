@@ -56,9 +56,17 @@ final class ArenaMaterials {
             portFloorName, portWallName, portMetalName, portPlanksName,
             portRopeName, portSkyName, portSkylineName,
         ]
-        for name in names {
-            if let texture = try? await TextureResource(named: name) {
-                materials.textures[name] = texture
+        // Decode every texture in parallel. Each child task is @MainActor for
+        // safe dictionary access, but `TextureResource(named:)` does its heavy
+        // work off the main thread, so the decodes still overlap.
+        await withTaskGroup(of: (String, TextureResource?).self) { group in
+            for name in names {
+                group.addTask { @MainActor in
+                    (name, try? await TextureResource(named: name))
+                }
+            }
+            for await (name, texture) in group {
+                if let texture { materials.textures[name] = texture }
             }
         }
         return materials

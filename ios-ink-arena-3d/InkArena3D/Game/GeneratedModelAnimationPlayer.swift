@@ -1,59 +1,52 @@
+import Foundation
 import RealityKit
 import simd
 
-/// Swaps generated Meshy animation entities under a model container.
-/// Assumes the placement contract: container → runtime child
-/// ("generated_model_runtime") → normalized base visual.
+/// Drives a character's animation by replaying shared `AnimationResource`
+/// clips directly on the character's single skinned model.
+///
+/// Placement contract: container → runtime ("generated_model_runtime") →
+/// base visual (normalized). At first use the player inserts a lightweight
+/// compensation entity between the runtime and the base visual so root-motion
+/// cancellation can offset the body without fighting the animation's own root
+/// transform track (which targets the base visual).
+///
+/// The clips themselves live in `AnimationClipStore` (one decode per clip for
+/// the whole app). Because every clip shares the base model's rig, there is no
+/// per-clip mesh clone and no entity swapping: clip transitions are true
+/// crossfades on the same skeleton, and memory stays flat.
 @MainActor
 final class GeneratedModelAnimationPlayer {
     private let container: Entity
-    private var templates: [String: Entity] = [:]
-    private var activeAnimation: Entity?
+
+    // Resolved once, on first preload/play.
+    private var resolved = false
+    /// The base model root the animation is played on (structural twin of each
+    /// clip's root, so the shared resource retargets cleanly).
     private var baseVisual: Entity?
+    private var baseVisualHome: SIMD3<Float> = .zero
+    /// First skinned mesh under `baseVisual` — source of `jointTransforms`.
+    private var skinnedModel: ModelEntity?
+    private var baseJointNames: [String] = []
+    private var rootChain: [Int]?
+    /// Parent of `baseVisual`, offset every frame to cancel horizontal drift.
+    private var compensationEntity: Entity?
+    private var compHome: SIMD3<Float> = .zero
+    /// Bind-pose bounds of the base visual (compensation-entity space), used to
+    /// scale the divergent-rig clone fallback. Nil until resolved.
     private var baseBounds: BoundingBox?
+
     private var currentLoop: String?
     private var oneShotRestoreTask: Task<Void, Never>?
-    /// Per-clip wrapper scale + position, computed once (from the template's
-    /// bind-pose bounds) instead of recalculated on every `play()` call —
-    /// clip transitions happen constantly during combat (idle↔run↔hit), so
-    /// this avoids a `visualBounds` walk of the skeleton each time.
-    private var alignmentCache: [String: (scale: Float, position: SIMD3<Float>)] = [:]
-    /// One reusable animated clone per clip. Cloning a skinned skeleton
-    /// recursively is one of the most expensive RealityKit operations, and
-    /// clip transitions (idle↔run↔hit) fire constantly in combat for every
-    /// fighter — so each clip is cloned ONCE and then re-enabled/replayed.
-    private struct CachedClone {
-        let wrapper: Entity
-        let animated: Entity
-        /// Wrapper transform right after alignment — restored on every reuse
-        /// (the root-motion lock moves the wrapper during playback).
-        let alignedScale: SIMD3<Float>
-        let alignedPosition: SIMD3<Float>
-        let initialAnimatedPosition: SIMD3<Float>
-        /// Skinned model + hips joint chain, resolved once per clip instead
-        /// of walking the entity tree on every transition.
-        let skinnedModel: ModelEntity?
-        let jointChain: [Int]?
-    }
 
-    private var clones: [String: CachedClone] = [:]
-    private var activeClone: CachedClone?
+    // Root-motion compensation for the active non-inplace looping clip.
+    private var rootMotionActive = false
+    private var startJoint: SIMD3<Float>?
 
-    /// Live compensation state for looping clips that carry baked-in root
-    /// motion (non-inplace walk-style clips like the roller push): the
-    /// skeleton drifts forward during playback and snaps back on loop, so
-    /// the wrapper is re-offset every frame to cancel the horizontal drift.
-    private struct RootMotionLock {
-        let wrapper: Entity
-        let animated: Entity
-        let model: ModelEntity
-        let chain: [Int]
-        var startJoint: SIMD3<Float>?
-        let startEntityPosition: SIMD3<Float>
-        let alignedPosition: SIMD3<Float>
-    }
-
-    private var rootLock: RootMotionLock?
+    // Divergent-rig safety net (see `preload`) — never expected to be used.
+    private var fallbackTemplates: [String: Entity] = [:]
+    private var fallbackClones: [String: Entity] = [:]
+    private var activeFallback: Entity?
 
     init(container: Entity) {
         self.container = container
@@ -63,30 +56,43 @@ final class GeneratedModelAnimationPlayer {
         container.findEntity(named: "generated_model_runtime") ?? container
     }
 
+    /// Resolves the base model and inserts the compensation entity once.
+    private func resolveBaseIfNeeded() {
+        guard !resolved else { return }
+        resolved = true
+        let rt = runtime
+        guard let visual = rt.children.first else { return }
+        // Insert a compensation wrapper between runtime and the base visual.
+        // It carries no normalization (that lives on runtime) so its rest
+        // transform is identity — reparenting keeps the world pose unchanged.
+        let comp = Entity()
+        comp.name = "anim_root_comp"
+        rt.addChild(comp)
+        comp.addChild(visual)
+        baseVisual = visual
+        baseVisualHome = visual.position
+        compensationEntity = comp
+        compHome = comp.position
+        let model = AnimationClipStore.findSkinnedModel(in: visual)
+        skinnedModel = model
+        baseJointNames = model?.jointNames ?? []
+        rootChain = model.flatMap { Self.rootJointChain($0) }
+        baseBounds = visual.visualBounds(relativeTo: comp)
+    }
+
     func preload(_ resourceNames: [String]) async {
-        if baseVisual == nil { baseVisual = runtime.children.first }
-        if baseBounds == nil, let baseVisual {
-            baseBounds = baseVisual.visualBounds(relativeTo: runtime)
-        }
-        for name in resourceNames where templates[name] == nil {
-            templates[name] = try? await Entity(named: name)
-        }
-        // Bake the wrapper scale/offset for every newly loaded clip once,
-        // from a throwaway (unparented) clone — every future clone of the
-        // same template shares the same bind-pose bounds.
-        guard let baseBounds, baseBounds.extents.y > 0.001 else { return }
-        for name in resourceNames where alignmentCache[name] == nil {
-            guard let template = templates[name] else { continue }
-            let probe = template.clone(recursive: true)
-            let bounds = probe.visualBounds(relativeTo: nil)
-            guard bounds.extents.y > 0.001 else { continue }
-            let scale = baseBounds.extents.y / bounds.extents.y
-            let position = SIMD3<Float>(
-                baseBounds.center.x - bounds.center.x * scale,
-                baseBounds.min.y - bounds.min.y * scale,
-                baseBounds.center.z - bounds.center.z * scale
-            )
-            alignmentCache[name] = (scale, position)
+        resolveBaseIfNeeded()
+        await AnimationClipStore.shared.load(resourceNames)
+        // Divergent-rig detection: any clip whose skeleton doesn't match the
+        // base model can't be replayed on it, so retain its template for the
+        // clone fallback. With matching Meshy exports this never triggers.
+        guard !baseJointNames.isEmpty else { return }
+        for name in resourceNames {
+            guard let clipJoints = AnimationClipStore.shared.joints(name) else { continue }
+            if clipJoints != baseJointNames, fallbackTemplates[name] == nil {
+                NSLog("[AnimPlayer] Rig mismatch for clip \(name) — using clone fallback")
+                fallbackTemplates[name] = try? await Entity(named: name)
+            }
         }
     }
 
@@ -116,108 +122,116 @@ final class GeneratedModelAnimationPlayer {
     }
 
     private func play(_ resourceName: String?, looping: Bool) {
-        // Hide (never destroy) the previous clip's clone — it will be
-        // re-enabled on its next turn instead of re-cloned.
-        if let previous = activeClone {
-            previous.animated.stopAllAnimations()
-            previous.wrapper.isEnabled = false
-        } else {
-            activeAnimation?.removeFromParent()
+        resolveBaseIfNeeded()
+        // Stop whatever was playing and clear the compensation offset.
+        baseVisual?.stopAllAnimations()
+        activeFallback?.stopAllAnimations()
+        if let fallback = activeFallback {
+            fallback.isEnabled = false
+            activeFallback = nil
+            baseVisual?.isEnabled = true
         }
-        activeAnimation = nil
-        activeClone = nil
-        rootLock = nil
-        baseVisual?.isEnabled = true
-        guard let resourceName, let template = templates[resourceName] else { return }
+        resetCompensation()
+        guard let resourceName else { return }
 
-        let cached: CachedClone
-        if let existing = clones[resourceName] {
-            cached = existing
-        } else {
-            // First use of this clip: build its reusable clone. Normalization
-            // (scale / orientation / centering) lives on the runtime parent,
-            // so the animated clone is added at identity — animation clips
-            // with root transform tracks can no longer knock the character
-            // over. A wrapper carries a per-clip correction so every clone
-            // matches the base visual's size and foot placement exactly —
-            // otherwise clips exported at a different raw size/origin shift
-            // the rendered body up and hand-anchored props (the weapon) end
-            // up at the character's feet.
-            let animated = template.clone(recursive: true)
-            let wrapper = Entity()
-            wrapper.name = "generated_anim_wrapper"
-            wrapper.addChild(animated)
-            runtime.addChild(wrapper)
-            if let alignment = alignmentCache[resourceName] {
-                wrapper.scale = SIMD3<Float>(repeating: alignment.scale)
-                wrapper.position = alignment.position
-            } else {
-                // Not preloaded (shouldn't normally happen) — fall back to
-                // the per-call bounds computation so playback still lines up.
-                alignToBase(wrapper: wrapper, animated: animated)
-            }
-            let model = Self.findSkinnedModel(in: animated)
-            cached = CachedClone(
-                wrapper: wrapper,
-                animated: animated,
-                alignedScale: wrapper.scale,
-                alignedPosition: wrapper.position,
-                initialAnimatedPosition: animated.position,
-                skinnedModel: model,
-                jointChain: model.flatMap { Self.rootJointChain($0) }
-            )
-            clones[resourceName] = cached
+        // Divergent rig → clone fallback (never expected in normal play).
+        if fallbackTemplates[resourceName] != nil {
+            playFallback(resourceName, looping: looping)
+            return
         }
 
-        // Restore the exact aligned pose — the root-motion lock may have
-        // shifted the wrapper during the clip's previous playback.
-        cached.wrapper.scale = cached.alignedScale
-        cached.wrapper.position = cached.alignedPosition
-        cached.animated.position = cached.initialAnimatedPosition
-        baseVisual?.isEnabled = false
-        cached.wrapper.isEnabled = true
-        if let animation = cached.animated.availableAnimations.first {
-            cached.animated.playAnimation(looping ? animation.repeat() : animation, transitionDuration: 0.2)
-        }
-        activeAnimation = cached.wrapper
-        activeClone = cached
+        guard let base = baseVisual,
+              let clip = AnimationClipStore.shared.clip(resourceName) else { return }
+        base.playAnimation(
+            looping ? clip.repeat() : clip,
+            transitionDuration: 0.2,
+            startsPaused: false
+        )
 
-        // Non-inplace looping clips need per-frame root-motion cancellation;
-        // inplace clips (and one-shots) play as-is.
-        if looping, !resourceName.contains("inplace"),
-           let model = cached.skinnedModel,
-           let chain = cached.jointChain {
-            rootLock = RootMotionLock(
-                wrapper: cached.wrapper,
-                animated: cached.animated,
-                model: model,
-                chain: chain,
-                startJoint: nil,
-                startEntityPosition: cached.initialAnimatedPosition,
-                alignedPosition: cached.alignedPosition
-            )
+        // Non-inplace looping clips carry baked forward root motion that must
+        // be cancelled every frame; inplace clips and one-shots play as-is.
+        if looping, !resourceName.contains("inplace"), rootChain != nil {
+            rootMotionActive = true
+            startJoint = nil
         }
     }
 
     /// Cancels the horizontal root motion of the active non-inplace looping
-    /// clip — call once per frame from the game update. Walk-style clips then
-    /// play in place while the game moves the character container itself,
-    /// with no forward drift or loop snap-back. No-op otherwise.
+    /// clip — call once per frame from the game update. The body then plays in
+    /// place while the game moves the character container itself, with no
+    /// forward drift or loop snap-back. No-op otherwise.
     func cancelHorizontalRootMotion() {
-        guard let lock = rootLock else { return }
-        let joint = Self.chainTranslation(lock.model, chain: lock.chain)
-        guard let startJoint = lock.startJoint else {
-            rootLock?.startJoint = joint
+        guard rootMotionActive,
+              let comp = compensationEntity,
+              let base = baseVisual,
+              let model = skinnedModel,
+              let chain = rootChain else { return }
+        let joint = Self.chainTranslation(model, chain: chain)
+        guard let startJoint else {
+            self.startJoint = joint
             return
         }
-        let toWrapper = lock.model.transformMatrix(relativeTo: lock.wrapper)
-        let current = toWrapper * SIMD4<Float>(joint.x, joint.y, joint.z, 1)
-        let start = toWrapper * SIMD4<Float>(startJoint.x, startJoint.y, startJoint.z, 1)
+        let toComp = model.transformMatrix(relativeTo: comp)
+        let current = toComp * SIMD4<Float>(joint.x, joint.y, joint.z, 1)
+        let start = toComp * SIMD4<Float>(startJoint.x, startJoint.y, startJoint.z, 1)
         var drift = SIMD3<Float>(current.x - start.x, current.y - start.y, current.z - start.z)
-        drift += lock.animated.position - lock.startEntityPosition
-        drift *= lock.wrapper.scale.x
-        lock.wrapper.position = lock.alignedPosition - SIMD3<Float>(drift.x, 0, drift.z)
+        drift += base.position - baseVisualHome
+        drift *= comp.scale.x
+        comp.position = compHome - SIMD3<Float>(drift.x, 0, drift.z)
     }
+
+    /// Restores the compensation entity and base visual to their rest poses and
+    /// disarms the per-frame root-motion lock.
+    private func resetCompensation() {
+        rootMotionActive = false
+        startJoint = nil
+        compensationEntity?.position = compHome
+        baseVisual?.position = baseVisualHome
+    }
+
+    // MARK: Divergent-rig clone fallback
+
+    /// Plays a clip whose rig differs from the base model by cloning the clip's
+    /// own mesh (old behaviour), scaled to the base visual's height. Kept
+    /// minimal — it only runs when `preload` logged a rig mismatch.
+    private func playFallback(_ name: String, looping: Bool) {
+        guard let comp = compensationEntity else { return }
+        let clone: Entity
+        if let existing = fallbackClones[name] {
+            clone = existing
+        } else if let template = fallbackTemplates[name] {
+            let animated = template.clone(recursive: true)
+            comp.addChild(animated)
+            alignClone(animated)
+            fallbackClones[name] = animated
+            clone = animated
+        } else {
+            return
+        }
+        baseVisual?.isEnabled = false
+        clone.isEnabled = true
+        if let anim = clone.availableAnimations.first {
+            clone.playAnimation(looping ? anim.repeat() : anim, transitionDuration: 0.2)
+        }
+        activeFallback = clone
+    }
+
+    /// Scales and offsets a fallback clone so its bind-pose bounds match the
+    /// base visual (same height, same bottom-center anchor).
+    private func alignClone(_ animated: Entity) {
+        guard let baseBounds, baseBounds.extents.y > 0.001 else { return }
+        let bounds = animated.visualBounds(relativeTo: animated.parent)
+        guard bounds.extents.y > 0.001 else { return }
+        let scale = baseBounds.extents.y / bounds.extents.y
+        animated.scale = SIMD3<Float>(repeating: scale)
+        animated.position = SIMD3<Float>(
+            baseBounds.center.x - bounds.center.x * scale,
+            baseBounds.min.y - bounds.min.y * scale,
+            baseBounds.center.z - bounds.center.z * scale
+        )
+    }
+
+    // MARK: Joint helpers
 
     /// Accumulated translation of the joint chain in the model's local space.
     private static func chainTranslation(_ model: ModelEntity, chain: [Int]) -> SIMD3<Float> {
@@ -248,33 +262,5 @@ final class GeneratedModelAnimationPlayer {
             chain.append(index)
         }
         return chain
-    }
-
-    /// First skinned mesh under the animated clone.
-    private static func findSkinnedModel(in entity: Entity) -> ModelEntity? {
-        if let model = entity as? ModelEntity, !model.jointNames.isEmpty {
-            return model
-        }
-        for child in entity.children {
-            if let found = findSkinnedModel(in: child) {
-                return found
-            }
-        }
-        return nil
-    }
-
-    /// Scales and offsets the wrapper so the clone's bind-pose bounds line up
-    /// with the base visual (same height, same bottom-center anchor).
-    private func alignToBase(wrapper: Entity, animated: Entity) {
-        guard let baseBounds else { return }
-        let bounds = animated.visualBounds(relativeTo: runtime)
-        guard bounds.extents.y > 0.001, baseBounds.extents.y > 0.001 else { return }
-        let scale = baseBounds.extents.y / bounds.extents.y
-        wrapper.scale = SIMD3<Float>(repeating: scale)
-        wrapper.position = SIMD3<Float>(
-            baseBounds.center.x - bounds.center.x * scale,
-            baseBounds.min.y - bounds.min.y * scale,
-            baseBounds.center.z - bounds.center.z * scale
-        )
     }
 }

@@ -367,28 +367,31 @@ extension GameController {
         }
     }
 
+    /// Loads a bundled template entity by name, or nil when the name is nil or
+    /// the resource fails to load. Used to fan out roster template decodes
+    /// concurrently via `async let`.
+    static func loadTemplate(_ name: String?) async -> Entity? {
+        guard let name else { return nil }
+        return try? await Entity(named: name)
+    }
+
     /// Spawns 2 orange teammates and 3 purple rivals — a full 3v3 lobby.
     func buildBots(_ root: Entity) async {
         let heroSpec = ModelCatalog.hero
         let rivalSpec = ModelCatalog.rival
-        var heroTemplate: Entity?
-        if let name = heroSpec.resourceName {
-            heroTemplate = try? await Entity(named: name)
-        }
-        var rivalTemplate: Entity?
-        if let name = rivalSpec.resourceName {
-            rivalTemplate = try? await Entity(named: name)
-        }
-        var blasterTemplate: Entity?
-        if let name = ModelCatalog.blaster.resourceName {
-            blasterTemplate = try? await Entity(named: name)
-        }
+        // Load all four fighter/weapon templates concurrently — they are
+        // independent decodes, so waiting for them in parallel roughly halves
+        // the roster load time versus the previous serial chain.
+        async let heroTemplateLoad = Self.loadTemplate(heroSpec.resourceName)
+        async let rivalTemplateLoad = Self.loadTemplate(rivalSpec.resourceName)
+        async let blasterTemplateLoad = Self.loadTemplate(ModelCatalog.blaster.resourceName)
         // Every match fields at least one designated sniper bot on the rival
         // side — it carries the charger and hunts elevated vantage points.
-        var sniperTemplate: Entity?
-        if let name = ModelCatalog.sniper.resourceName {
-            sniperTemplate = try? await Entity(named: name)
-        }
+        async let sniperTemplateLoad = Self.loadTemplate(ModelCatalog.sniper.resourceName)
+        let heroTemplate = await heroTemplateLoad
+        let rivalTemplate = await rivalTemplateLoad
+        let blasterTemplate = await blasterTemplateLoad
+        let sniperTemplate = await sniperTemplateLoad
 
         // Local duel: no AI — the only opponent is the remote player's
         // puppet, driven by the network state stream. Its team and base
