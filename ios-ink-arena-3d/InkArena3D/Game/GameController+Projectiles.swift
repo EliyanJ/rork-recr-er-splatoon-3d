@@ -335,7 +335,7 @@ extension GameController {
 
     /// Quick expanding splash flash for grenade impacts.
     func spawnBurst(at pos: SIMD3<Float>, team: Team) {
-        guard let worldRoot, let material = projectileMaterials[team] else { return }
+        guard worldRoot != nil, let material = projectileMaterials[team] else { return }
         // Same global transient-VFX budget as the hit splashes.
         guard liveTransientVFX < qualitySettings.transientVFXBudget else { return }
         liveTransientVFX += 1
@@ -343,18 +343,15 @@ extension GameController {
         // blast — anchor the flash to the interior floor instead.
         var surface = paintSurfaceHeight(atX: pos.x, z: pos.z)
         if surface > pos.y + 1.2 { surface = 0 }
-        let burst = ModelEntity(mesh: burstMesh, materials: [material])
-        burst.position = [pos.x, surface + 0.25, pos.z]
-        burst.scale = [1, 0.5, 1]
-        worldRoot.addChild(burst)
-
-        var target = burst.transform
-        target.scale = [5.5, 0.3, 5.5]
-        burst.move(to: target, relativeTo: burst.parent, duration: 0.28, timingFunction: .easeOut)
-        Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(300))
-            burst.removeFromParent()
-            self?.liveTransientVFX -= 1
+        // Recycled from `vfxPool` — no per-blast entity or `Task.sleep`.
+        if let burst = vfxPool.spawn(
+            mesh: burstMesh, materials: [material],
+            position: [pos.x, surface + 0.25, pos.z], scale: [1, 0.5, 1],
+            lifetime: 0.3, now: elapsed, budgeted: true
+        ) {
+            var target = burst.transform
+            target.scale = [5.5, 0.3, 5.5]
+            burst.move(to: target, relativeTo: burst.parent, duration: 0.28, timingFunction: .easeOut)
         }
     }
 

@@ -46,6 +46,10 @@ extension GameController {
         // matches, a leftover count here would silently suppress every hit
         // VFX for the whole next match.
         liveTransientVFX = 0
+        // Re-parent the VFX pool to the fresh world root and pre-create a
+        // handful of idle entities so the first intense fight never allocates.
+        vfxPool.reset(root: root)
+        vfxPool.warm(count: 24)
 
         // Warm the drop pool up front so a burst of fire never allocates a
         // fresh entity mid-match. Each drop is parented once and left disabled

@@ -583,6 +583,11 @@ final class GameController {
     /// gated by `qualitySettings.transientVFXBudget` so a chaotic fight can
     /// never snowball entity churn.
     @ObservationIgnored var liveTransientVFX = 0
+    /// Recycles the short-lived hit/kill/burst VFX entities instead of
+    /// creating and destroying a fresh `ModelEntity` (and an async
+    /// `Task.sleep`) per event. Reset + warmed at match setup, ticked from
+    /// the sim loop.
+    @ObservationIgnored let vfxPool = VFXPool()
     /// Shared white flash material for kill explosions — reused every kill.
     @ObservationIgnored let killFlashMaterial: UnlitMaterial = {
         var m = UnlitMaterial(color: UIColor(white: 1, alpha: 1))

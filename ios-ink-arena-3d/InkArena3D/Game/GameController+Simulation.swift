@@ -28,6 +28,10 @@ extension GameController {
         dt = min(dt, 1 / 20)
         let dtd = Double(dt)
         elapsed += dtd
+        // Recycle any expired hit/kill/burst VFX. Runs every frame (even while
+        // the intro overlay idles) so lingering effects are torn down without
+        // per-event async tasks. Freed budgeted entities restore the live count.
+        liveTransientVFX = max(0, liveTransientVFX - vfxPool.tick(now: elapsed))
         updateQualityAutoDowngrade(dt: dt, rawDt: rawDt)
 
         // Before the intro countdown ends the scene only idles: camera,

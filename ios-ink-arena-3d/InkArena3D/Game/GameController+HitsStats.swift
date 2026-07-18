@@ -110,60 +110,57 @@ extension GameController {
     /// Impact burst on a hit character: expanding ink splash plus a soft
     /// puff of paint mist that drifts up — reads clearly from any distance.
     func spawnHitSplash(at pos: SIMD3<Float>, team: Team) {
-        guard let worldRoot, let material = projectileMaterials[team] else { return }
+        guard worldRoot != nil, let material = projectileMaterials[team] else { return }
         // The splash + hit-marker flash are the core gameplay readout —
         // "did I just land a hit" — so they ALWAYS spawn, uncapped. Only the
         // purely decorative mist puff below is subject to the transient-VFX
         // budget; losing a few frames of budget is worth it for feedback the
-        // player actually needs to see.
+        // player actually needs to see. All entities come from the recycled
+        // `vfxPool` and are torn down by the sim-loop tick — no per-hit
+        // allocation and no `Task.sleep`.
+        let now = elapsed
         liveTransientVFX += 1
         let vfx = qualitySettings.vfx
-        let splash = ModelEntity(mesh: hitSplashMesh, materials: [material])
-        splash.position = pos
-        worldRoot.addChild(splash)
-        var target = splash.transform
-        target.scale = [4.4, 4.4, 4.4]
-        splash.move(to: target, relativeTo: splash.parent, duration: 0.18, timingFunction: .easeOut)
+        if let splash = vfxPool.spawn(
+            mesh: hitSplashMesh, materials: [material],
+            position: pos, scale: [1, 1, 1],
+            lifetime: 0.21, now: now, budgeted: true
+        ) {
+            var target = splash.transform
+            target.scale = [4.4, 4.4, 4.4]
+            splash.move(to: target, relativeTo: splash.parent, duration: 0.18, timingFunction: .easeOut)
+        }
 
         // The drifting mist puff is the least essential layer — skipped on
         // Performance/Lite, and gated by the transient-VFX budget so it never
         // competes with the two feedback layers above for entity churn.
-        var puff: ModelEntity?
         if vfx == .full, liveTransientVFX < qualitySettings.transientVFXBudget {
             liveTransientVFX += 1
-            let puffEntity = ModelEntity(mesh: hitPuffMesh, materials: [hitPuffMaterial])
-            puffEntity.position = pos + SIMD3<Float>(0, 0.18, 0)
-            worldRoot.addChild(puffEntity)
-            var puffTarget = puffEntity.transform
-            puffTarget.scale = [2.6, 2.6, 2.6]
-            puffTarget.translation.y += 0.5
-            puffEntity.move(to: puffTarget, relativeTo: puffEntity.parent, duration: 0.3, timingFunction: .easeOut)
-            puff = puffEntity
+            if let puff = vfxPool.spawn(
+                mesh: hitPuffMesh, materials: [hitPuffMaterial],
+                position: pos + SIMD3<Float>(0, 0.18, 0), scale: [1, 1, 1],
+                lifetime: 0.36, now: now, budgeted: true
+            ) {
+                var puffTarget = puff.transform
+                puffTarget.scale = [2.6, 2.6, 2.6]
+                puffTarget.translation.y += 0.5
+                puff.move(to: puffTarget, relativeTo: puff.parent, duration: 0.3, timingFunction: .easeOut)
+            }
         }
 
         // Hitmarker flash à la Fortnite/Apex: a bright WHITE silhouette-sized
         // glow envelops the hit character for ~150 ms — short, punchy, and
         // readable without polluting the screen. Always shown — this is the
         // single clearest "you landed a hit" signal in the whole game.
-        let flashEntity = ModelEntity(mesh: hitFlashMesh, materials: [hitFlashMaterial])
-        flashEntity.position = pos
-        flashEntity.scale = [1.15, GameConfig.characterHeight / (GameConfig.characterHitRadius * 1.6), 1.15]
-        worldRoot.addChild(flashEntity)
-        var flashTarget = flashEntity.transform
-        flashTarget.scale *= 1.15
-        flashEntity.move(to: flashTarget, relativeTo: flashEntity.parent, duration: 0.15, timingFunction: .easeOut)
-
-        Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(150))
-            flashEntity.removeFromParent()
-            self?.liveTransientVFX -= 1
-            try? await Task.sleep(for: .milliseconds(60))
-            splash.removeFromParent()
-            try? await Task.sleep(for: .milliseconds(150))
-            if let puff {
-                puff.removeFromParent()
-                self?.liveTransientVFX -= 1
-            }
+        let flashScale = SIMD3<Float>(1.15, GameConfig.characterHeight / (GameConfig.characterHitRadius * 1.6), 1.15)
+        if let flash = vfxPool.spawn(
+            mesh: hitFlashMesh, materials: [hitFlashMaterial],
+            position: pos, scale: flashScale,
+            lifetime: 0.15, now: now, budgeted: false
+        ) {
+            var flashTarget = flash.transform
+            flashTarget.scale *= 1.15
+            flash.move(to: flashTarget, relativeTo: flash.parent, duration: 0.15, timingFunction: .easeOut)
         }
     }
 
@@ -171,53 +168,50 @@ extension GameController {
     /// team's color — the reward moment for landing a kill, distinct from
     /// the smaller per-hit splash used while a target is still alive.
     func spawnKillExplosion(at pos: SIMD3<Float>, team: Team) {
-        guard let worldRoot, let material = projectileMaterials[team] else { return }
+        guard worldRoot != nil, let material = projectileMaterials[team] else { return }
         // Kill explosions are the reward moment — always shown, but still
-        // counted against the transient-VFX budget so hit splashes yield.
+        // counted against the transient-VFX budget so hit splashes yield. All
+        // entities are recycled from `vfxPool` and torn down by the sim tick.
+        let now = elapsed
         liveTransientVFX += 1
         let vfx = qualitySettings.vfx
         let surface = paintSurfaceHeight(atX: pos.x, z: pos.z)
 
         // Expanding ground ring of ink — always shown, the core kill readout.
-        let ring = ModelEntity(mesh: killRingMesh, materials: [material])
-        ring.position = [pos.x, surface + 0.05, pos.z]
-        ring.scale = [1, 0.25, 1]
-        worldRoot.addChild(ring)
-        var ringTarget = ring.transform
-        ringTarget.scale = [7.5, 0.15, 7.5]
-        ring.move(to: ringTarget, relativeTo: ring.parent, duration: 0.42, timingFunction: .easeOut)
+        if let ring = vfxPool.spawn(
+            mesh: killRingMesh, materials: [material],
+            position: [pos.x, surface + 0.05, pos.z], scale: [1, 0.25, 1],
+            lifetime: 0.42, now: now, budgeted: true
+        ) {
+            var ringTarget = ring.transform
+            ringTarget.scale = [7.5, 0.15, 7.5]
+            ring.move(to: ringTarget, relativeTo: ring.parent, duration: 0.42, timingFunction: .easeOut)
+        }
 
         // Vertical plume + flash pop are the extra punch layers — skipped on
         // the lightest preset (kill explosions are rarer than hits, so
         // Performance still keeps them for the celebratory feel).
-        var plume: ModelEntity?
-        var flash: ModelEntity?
         if vfx != .minimal {
-            let plumeEntity = ModelEntity(mesh: killPlumeMesh, materials: [material])
-            plumeEntity.position = [pos.x, surface + GameConfig.characterHeight * 0.4, pos.z]
-            worldRoot.addChild(plumeEntity)
-            var plumeTarget = plumeEntity.transform
-            plumeTarget.scale = [2.6, 3.4, 2.6]
-            plumeTarget.translation.y += 1.6
-            plumeEntity.move(to: plumeTarget, relativeTo: plumeEntity.parent, duration: 0.36, timingFunction: .easeOut)
-            plume = plumeEntity
+            if let plume = vfxPool.spawn(
+                mesh: killPlumeMesh, materials: [material],
+                position: [pos.x, surface + GameConfig.characterHeight * 0.4, pos.z], scale: [1, 1, 1],
+                lifetime: 0.42, now: now, budgeted: false
+            ) {
+                var plumeTarget = plume.transform
+                plumeTarget.scale = [2.6, 3.4, 2.6]
+                plumeTarget.translation.y += 1.6
+                plume.move(to: plumeTarget, relativeTo: plume.parent, duration: 0.36, timingFunction: .easeOut)
+            }
 
-            let flashEntity = ModelEntity(mesh: killFlashMesh, materials: [killFlashMaterial])
-            flashEntity.position = [pos.x, surface + GameConfig.characterHeight * 0.5, pos.z]
-            worldRoot.addChild(flashEntity)
-            var flashTarget = flashEntity.transform
-            flashTarget.scale *= 1.3
-            flashEntity.move(to: flashTarget, relativeTo: flashEntity.parent, duration: 0.14, timingFunction: .easeOut)
-            flash = flashEntity
-        }
-
-        Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(140))
-            flash?.removeFromParent()
-            try? await Task.sleep(for: .milliseconds(280))
-            ring.removeFromParent()
-            plume?.removeFromParent()
-            self?.liveTransientVFX -= 1
+            if let flash = vfxPool.spawn(
+                mesh: killFlashMesh, materials: [killFlashMaterial],
+                position: [pos.x, surface + GameConfig.characterHeight * 0.5, pos.z], scale: [1, 1, 1],
+                lifetime: 0.14, now: now, budgeted: false
+            ) {
+                var flashTarget = flash.transform
+                flashTarget.scale *= 1.3
+                flash.move(to: flashTarget, relativeTo: flash.parent, duration: 0.14, timingFunction: .easeOut)
+            }
         }
     }
 
