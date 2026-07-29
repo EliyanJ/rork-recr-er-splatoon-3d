@@ -27,7 +27,7 @@ extension GameController {
         playerContainer = container
         heroRuntime = container.findEntity(named: "generated_model_runtime")
 
-        addBlobShadow(to: container)
+        playerBlobShadow = addBlobShadow(to: container)
         let tag = makeNameTag(text: ProfileStore.shared.playerName, color: localTeam.uiColor)
         container.addChild(tag)
         playerNameTag = tag
@@ -510,7 +510,7 @@ extension GameController {
         container.position = home
         container.orientation = simd_quatf(angle: facing, axis: [0, 1, 0])
         root.addChild(container)
-        addBlobShadow(to: container)
+        let shadow = addBlobShadow(to: container)
         let tag = makeNameTag(text: name, color: team.uiColor)
         container.addChild(tag)
 
@@ -558,6 +558,7 @@ extension GameController {
         bot.netID = netID
         bot.isNetPuppet = isNetPuppet
         bot.bodyRuntime = bodyRuntime
+        bot.blobShadow = shadow
         bot.currentWeapon = weapon
         newWaypoint(for: bot)
         bots.append(bot)
@@ -566,12 +567,25 @@ extension GameController {
         await buildBotDiveForm(for: bot)
     }
 
-    func addBlobShadow(to container: Entity) {
+    /// Soft dark disc under a fighter's feet, grounding it against the floor.
+    ///
+    /// A flat plane, not a flattened cylinder: transparent geometry is never
+    /// depth-culled against itself, so the old 0.01-tall cylinder blended its
+    /// top cap, bottom cap AND side ring on every single fighter — three times
+    /// the blend cost of the one face you can actually see. Back-face culling
+    /// on top of that drops the disc when seen from below.
+    @discardableResult
+    func addBlobShadow(to container: Entity) -> Entity {
         var material = UnlitMaterial(color: .black)
         material.blending = .transparent(opacity: 0.3)
-        let shadow = ModelEntity(mesh: .generateCylinder(height: 0.01, radius: 0.55), materials: [material])
+        material.faceCulling = .back
+        let shadow = ModelEntity(
+            mesh: .generatePlane(width: 1.1, depth: 1.1, cornerRadius: 0.55),
+            materials: [material]
+        )
         shadow.position = [0, 0.04, 0]
         container.addChild(shadow)
+        return shadow
     }
 
     static func fallbackCharacter(team: Team) -> ModelEntity {

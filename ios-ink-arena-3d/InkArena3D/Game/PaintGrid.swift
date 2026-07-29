@@ -106,7 +106,10 @@ final class PaintGrid {
     /// excluded from the coverage denominator so 100% stays reachable.
     private var blockedTiles: [Bool]
     private var blockedCount = 0
-    private let splashGeometries: [SplashGeometry]
+    private var splashGeometries: [SplashGeometry]
+    /// Whether the current `splashGeometries` use the low-point silhouette.
+    /// Mutable so a runtime quality downgrade takes effect on new splats.
+    private var simplifiedSplash: Bool
     // Flat, unlit color — matches the projectiles/VFX exactly (same
     // `UnlitMaterial` family, same raw team color) instead of the old
     // `SimpleMaterial`, which is scene-lit and got darkened/tinted by the
@@ -148,6 +151,31 @@ final class PaintGrid {
     /// overlay to show the before/after gain live.
     var paintedTileCount: Int { orangeCount + purpleCount }
 
+    /// The shared pool of splash silhouettes for the given detail level.
+    private static func makeSplashGeometries(simplified: Bool) -> [SplashGeometry] {
+        let baseRadius = GameConfig.tileSize * 0.82
+        let pointCount = simplified ? 6 : 12
+        return (0..<6).map {
+            PaintGrid.generateSplashGeometry(
+                seed: UInt64($0) &+ 17,
+                baseRadius: baseRadius,
+                height: 0.012,
+                pointCount: pointCount
+            )
+        }
+    }
+
+    /// Switches the splash silhouette detail mid-match (runtime quality
+    /// downgrade). Only affects splats merged from now on: already-built chunk
+    /// meshes keep the shapes they were baked with, which is invisible in play
+    /// and avoids re-merging the entire arena at the exact moment the device is
+    /// already struggling.
+    func setSimplifiedSplash(_ simplified: Bool) {
+        guard simplified != simplifiedSplash else { return }
+        simplifiedSplash = simplified
+        splashGeometries = PaintGrid.makeSplashGeometries(simplified: simplified)
+    }
+
     init(
         heightAt: @escaping (Float, Float) -> Float,
         surfaceAt: @escaping (Float, Float) -> SurfaceClip? = { _, _ in nil },
@@ -182,11 +210,8 @@ final class PaintGrid {
         // continuous coat of ink instead of a scatter of spaced-out discs.
         // The lightest presets use a plainer, lower-point silhouette — fewer
         // triangles baked into every merged chunk mesh.
-        let baseRadius = GameConfig.tileSize * 0.82
-        let pointCount = simplifiedSplash ? 6 : 12
-        splashGeometries = (0..<6).map {
-            PaintGrid.generateSplashGeometry(seed: UInt64($0) &+ 17, baseRadius: baseRadius, height: 0.012, pointCount: pointCount)
-        }
+        self.simplifiedSplash = simplifiedSplash
+        splashGeometries = PaintGrid.makeSplashGeometries(simplified: simplifiedSplash)
         // Paint is a flat decal lying on the ground: only the upward-facing cap
         // exists (see `generateSplashGeometry`), wound counter-clockwise as seen
         // from above, so standard back-face culling is both correct AND cheaper.

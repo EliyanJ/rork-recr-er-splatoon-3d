@@ -184,6 +184,7 @@ extension GameController {
         sun.light.color = sunLightColor
         sun.look(at: .zero, from: [10, 18, 10], relativeTo: nil)
         root.addChild(sun)
+        sunLight = sun
 
         // Colored bounce so shadows stay vibrant instead of gray. Its intensity
         // scales with the active quality preset: a full bounce on Ultra/
@@ -196,6 +197,7 @@ extension GameController {
             fill.light.color = fillLightColor
             fill.look(at: .zero, from: [-10, 13, -6], relativeTo: nil)
             root.addChild(fill)
+            fillLight = fill
         }
     }
 

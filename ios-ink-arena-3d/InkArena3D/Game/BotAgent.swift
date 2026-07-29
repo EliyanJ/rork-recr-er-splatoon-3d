@@ -28,6 +28,9 @@ final class BotAgent {
     /// The animated character runtime (hidden while this agent is in sponge
     /// dive form). Captured after the body model is attached.
     var bodyRuntime: Entity?
+    /// Flat blob shadow under the feet — retained so distance LOD can hide it
+    /// without walking the entity hierarchy every pass.
+    var blobShadow: Entity?
     /// Sponge dive form shown while `isDiving` — built for every fighter
     /// (solo AI bots dive tactically too, not just the remote duel puppet).
     var diveForm: Entity?

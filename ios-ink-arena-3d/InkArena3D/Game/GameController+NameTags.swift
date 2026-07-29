@@ -18,12 +18,18 @@ extension GameController {
             alignment: .center,
             lineBreakMode: .byTruncatingTail
         )
-        let label = ModelEntity(mesh: mesh, materials: [UnlitMaterial(color: color)])
+        // The tag is billboarded, so the extrusion's back face and side walls
+        // are never visible — back-face culling drops roughly half of the text
+        // geometry's rasterization for free.
+        var textMaterial = UnlitMaterial(color: color)
+        textMaterial.faceCulling = .back
+        let label = ModelEntity(mesh: mesh, materials: [textMaterial])
         let bounds = mesh.bounds
         label.position = [-bounds.center.x, -bounds.center.y, 0.014]
 
         var backingMaterial = UnlitMaterial(color: .black)
         backingMaterial.blending = .transparent(opacity: 0.42)
+        backingMaterial.faceCulling = .back
         let backing = ModelEntity(
             mesh: .generatePlane(
                 width: bounds.extents.x + 0.28,
@@ -59,6 +65,10 @@ extension GameController {
             return
         }
         let camPos = camera.position(relativeTo: nil)
+        // Beyond this distance the pseudo is a couple of unreadable pixels, so
+        // the preset hides it: one less billboard update and two fewer draw
+        // calls (one of them blended) per distant fighter.
+        let cullDistance = qualitySettings.nameTagCullDistance
         if let tag = playerNameTag {
             let visible = cameraMode == .thirdPerson && !isPlayerDown
             if tag.isEnabled != visible {
@@ -69,7 +79,12 @@ extension GameController {
             }
         }
         for bot in bots where !bot.isDown {
-            if let tag = bot.nameTag {
+            guard let tag = bot.nameTag else { continue }
+            let visible = simd_distance(camPos, tag.position(relativeTo: nil)) <= cullDistance
+            if tag.isEnabled != visible {
+                tag.isEnabled = visible
+            }
+            if visible {
                 billboard(tag, toward: camPos)
             }
         }

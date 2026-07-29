@@ -266,6 +266,23 @@ final class GameController {
     @ObservationIgnored var nameTagAccum: Float = 0
     /// Seconds between name-tag billboard refreshes.
     @ObservationIgnored let nameTagInterval: Float = 1.0 / 14.0
+    /// Accumulated time for the character distance-LOD pass (animation
+    /// freezing, shadow/tag culling) — re-evaluated a few times a second, since
+    /// a fighter can't cross an LOD threshold meaningfully faster than that.
+    @ObservationIgnored var characterLODAccum: Float = 0
+    /// Seconds between character LOD re-evaluations.
+    @ObservationIgnored let characterLODInterval: Float = 1.0 / 5.0
+    /// Blob shadow under the local player — retained for distance LOD.
+    @ObservationIgnored var playerBlobShadow: Entity?
+    /// Parent of every purely decorative arena entity (trees, holo panels,
+    /// crystals, distant mountains). Kept as one node so a runtime quality
+    /// downgrade can switch the whole decorative layer off at once instead of
+    /// only affecting matches started afterwards.
+    @ObservationIgnored var decorRoot: Entity?
+    /// The two arena lights, retained so a runtime downgrade can dim or drop
+    /// them mid-match instead of waiting for the next match.
+    @ObservationIgnored var sunLight: DirectionalLight?
+    @ObservationIgnored var fillLight: DirectionalLight?
     /// Rolling frame index used to stagger bot AI “thinking” across frames so
     /// they don't all evaluate targets in the same image.
     @ObservationIgnored var botThinkFrame = 0

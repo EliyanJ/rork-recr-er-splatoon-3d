@@ -38,6 +38,11 @@ final class GeneratedModelAnimationPlayer {
 
     private var currentLoop: String?
     private var oneShotRestoreTask: Task<Void, Never>?
+    /// Controller of the clip currently playing on the base visual — retained
+    /// only so distance LOD can pause/resume skinning.
+    private var activeController: AnimationPlaybackController?
+    /// True while this character's animation is frozen by distance LOD.
+    private(set) var isPausedByLOD = false
 
     // Root-motion compensation for the active non-inplace looping clip.
     private var rootMotionActive = false
@@ -126,6 +131,7 @@ final class GeneratedModelAnimationPlayer {
         // Stop whatever was playing and clear the compensation offset.
         baseVisual?.stopAllAnimations()
         activeFallback?.stopAllAnimations()
+        activeController = nil
         if let fallback = activeFallback {
             fallback.isEnabled = false
             activeFallback = nil
@@ -142,17 +148,38 @@ final class GeneratedModelAnimationPlayer {
 
         guard let base = baseVisual,
               let clip = AnimationClipStore.shared.clip(resourceName) else { return }
-        base.playAnimation(
+        activeController = base.playAnimation(
             looping ? clip.repeat() : clip,
             transitionDuration: 0.2,
             startsPaused: false
         )
+        // A clip starting while the character is far away stays frozen: the
+        // pose is correct, the per-frame skinning cost is not paid.
+        if isPausedByLOD {
+            activeController?.pause()
+        }
 
         // Non-inplace looping clips carry baked forward root motion that must
         // be cancelled every frame; inplace clips and one-shots play as-is.
         if looping, !resourceName.contains("inplace"), rootChain != nil {
             rootMotionActive = true
             startJoint = nil
+        }
+    }
+
+    /// Freezes (or resumes) the active clip for distance LOD. While frozen the
+    /// character holds its current pose, so RealityKit stops re-evaluating the
+    /// animation and re-skinning the mesh every frame — by far the biggest
+    /// per-character saving. Purely visual: nothing in the simulation reads
+    /// this, and a resumed clip picks up exactly where it left off.
+    func setLODPaused(_ paused: Bool) {
+        guard paused != isPausedByLOD else { return }
+        isPausedByLOD = paused
+        guard let controller = activeController, controller.isValid else { return }
+        if paused {
+            controller.pause()
+        } else {
+            controller.resume()
         }
     }
 
@@ -211,7 +238,8 @@ final class GeneratedModelAnimationPlayer {
         baseVisual?.isEnabled = false
         clone.isEnabled = true
         if let anim = clone.availableAnimations.first {
-            clone.playAnimation(looping ? anim.repeat() : anim, transitionDuration: 0.2)
+            activeController = clone.playAnimation(looping ? anim.repeat() : anim, transitionDuration: 0.2)
+            if isPausedByLOD { activeController?.pause() }
         }
         activeFallback = clone
     }

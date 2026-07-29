@@ -7,6 +7,19 @@ import simd
 /// Arena & decor construction: floor, walls, platforms, ramps, water,
 /// ziplines and set dressing. Verbatim from `GameController`.
 extension GameController {
+    /// The shared parent for purely decorative entities, created on first use.
+    /// Grouping them means a runtime quality downgrade can hide the entire
+    /// decorative layer in one assignment, instead of the decision only
+    /// mattering for matches started afterwards.
+    func decorLayer(in parent: Entity) -> Entity {
+        if let existing = decorRoot, existing.parent === parent { return existing }
+        let layer = Entity()
+        layer.name = "decor_layer"
+        parent.addChild(layer)
+        decorRoot = layer
+        return layer
+    }
+
     func buildArena(_ root: Entity) {
         let halfW = GameConfig.arenaWidth / 2
         let halfD = GameConfig.arenaDepth / 2
@@ -38,9 +51,37 @@ extension GameController {
             scale: [22, 22],
             fallback: apronFallback
         ) ?? SimpleMaterial(color: apronFallback, roughness: 0.9, isMetallic: false)
-        let apron = ModelEntity(mesh: .generateBox(size: [170, 0.2, 170]), materials: [apronMaterial])
-        apron.position = [0, -0.22, 0]
-        root.addChild(apron)
+        // The apron is a RING, not a slab: the old 170×170 box ran underneath
+        // the entire playfield, so every on-screen ground pixel was rasterized
+        // twice — once for the apron, once for the floor on top of it — for a
+        // surface that is never visible. Four pieces around the footprint cover
+        // exactly the same visible area with zero overlap, and drop the five
+        // hidden faces of the box while we're at it.
+        let apronOuter: Float = 170
+        let innerW = GameConfig.arenaWidth + 1.6
+        let innerD = GameConfig.arenaDepth + 1.6
+        let bandZ = (apronOuter - innerD) / 2
+        let bandX = (apronOuter - innerW) / 2
+        // Keep the original texel density (22 repeats across 170 m) so the
+        // ground pattern is pixel-identical to the single-slab version.
+        let apronDensity: Float = 22 / apronOuter
+        func apronPiece(size: SIMD3<Float>, at position: SIMD3<Float>) {
+            let material = mats?.pbr(
+                floorTextureName,
+                tint: apronTint,
+                roughness: 0.9,
+                scale: [size.x * apronDensity, size.z * apronDensity],
+                fallback: apronFallback
+            ) ?? apronMaterial
+            let piece = ModelEntity(mesh: .generateBox(size: size), materials: [material])
+            piece.position = position
+            root.addChild(piece)
+        }
+        let apronY: Float = -0.22
+        apronPiece(size: [apronOuter, 0.2, bandZ], at: [0, apronY, -(innerD / 2 + bandZ / 2)])
+        apronPiece(size: [apronOuter, 0.2, bandZ], at: [0, apronY, innerD / 2 + bandZ / 2])
+        apronPiece(size: [bandX, 0.2, innerD], at: [-(innerW / 2 + bandX / 2), apronY, 0])
+        apronPiece(size: [bandX, 0.2, innerD], at: [innerW / 2 + bandX / 2, apronY, 0])
 
         // Spawn pads under each base.
         let mainPad = ModelEntity(
@@ -182,8 +223,10 @@ extension GameController {
         addPaintCan(root, at: [-20, 0, -8], color: cyanNeon)
         addPaintCan(root, at: [20, 0, 8], color: amberNeon)
 
-        // Decorative layer — skipped by the Performance/Lite graphics presets.
+        // Decorative layer — skipped by the Performance/Lite graphics presets,
+        // and gathered under one node so a runtime downgrade can switch it off.
         guard qualitySettings.decorEnabled else { return }
+        let root = decorLayer(in: root)
         addNeoTree(root, at: [-24, -10], foliage: violetNeon)
         addNeoTree(root, at: [24, 16], foliage: limeNeon)
         addNeoTree(root, at: [21, -11], foliage: cyanNeon)
@@ -267,8 +310,10 @@ extension GameController {
         addPaintCan(root, at: [-30, 0, -10], color: cyanCrystal)
         addPaintCan(root, at: [30, 0, 10], color: goldGlow)
 
-        // Decorative layer — skipped by the Performance/Lite graphics presets.
+        // Decorative layer — skipped by the Performance/Lite graphics presets,
+        // and gathered under one node so a runtime downgrade can switch it off.
         guard qualitySettings.decorEnabled else { return }
+        let root = decorLayer(in: root)
         addNeoTree(root, at: [-30, 18], foliage: jungleGreen)
         addNeoTree(root, at: [30, -18], foliage: limeGreen)
         addNeoTree(root, at: [-20, -19], foliage: limeGreen)
@@ -832,6 +877,7 @@ extension GameController {
 
         // Skipped by the Performance/Lite graphics presets.
         guard qualitySettings.decorEnabled else { return }
+        let root = decorLayer(in: root)
 
         // Floating crystals drifting above the ruins.
         let crystalSpots: [(SIMD3<Float>, Float, UIColor)] = [
@@ -989,6 +1035,7 @@ extension GameController {
 
         // Très loin — skipped by the Performance/Lite graphics presets.
         guard qualitySettings.decorEnabled else { return }
+        let root = decorLayer(in: root)
 
         // Montagnes stylisées en silhouette.
         let mountainSpots: [(SIMD2<Float>, Float, Float, UIColor)] = [

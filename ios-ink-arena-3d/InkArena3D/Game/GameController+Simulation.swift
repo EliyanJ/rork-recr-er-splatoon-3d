@@ -15,19 +15,32 @@ extension GameController {
         // untouched, so CPU cost and motion updates genuinely follow the
         // setting instead of being cosmetic.
         var dt = rawDt
+        // Real time elapsed since the last SIMULATED frame — with the governor
+        // on, that is the accumulated carry, not just the last display frame.
+        var realDt = rawDt
         let targetFPS = ProfileStore.shared.targetFPS
         if targetFPS < displayMaxFPS {
             frameCarry += rawDt
             let interval = 1 / Float(targetFPS)
             guard frameCarry >= interval - 0.001 else { return }
             dt = frameCarry
+            realDt = frameCarry
             frameCarry = 0
         }
-        // Clamp hitch spikes so one slow frame never teleports the physics
-        // or makes the camera lurch to catch up.
-        dt = min(dt, 1 / 20)
+        // Clamp hitch spikes so one slow frame never teleports the physics or
+        // makes the camera lurch to catch up. This deliberately trades real
+        // time for stability: below the clamp the world genuinely runs in slow
+        // motion, so the threshold sits low (15 FPS) — far under any framerate
+        // we ship at, and only ever hit by a one-off hitch.
+        dt = min(dt, 1 / 15)
+        // Wall-clock time actually elapsed, unaffected by the hitch clamp. The
+        // match countdown, the VFX expiry clock and the network authority all
+        // run on THIS: a hitch used to stretch a 3-minute match past 3 minutes
+        // and leave hit effects lingering, because everything shared the
+        // clamped physics step.
+        let clockDt = Double(realDt)
         let dtd = Double(dt)
-        elapsed += dtd
+        elapsed += clockDt
         // Recycle any expired hit/kill/burst VFX. Runs every frame (even while
         // the intro overlay idles) so lingering effects are torn down without
         // per-event async tasks. Freed budgeted entities restore the live count.
@@ -42,12 +55,13 @@ extension GameController {
             updateWeaponEffects(dt: dt)
             updateCamera(dt: dt, target: playerContainer.position, camera: camera)
             updateNameTagsThrottled(dt: dt, camera: camera)
+            updateCharacterLODThrottled(dt: dt, camera: camera)
             return
         }
 
         // Training is a pure sandbox: no clock, no end-of-match.
         if !isMatchOver && !isTraining {
-            timeLeftExact = max(0, timeLeftExact - dtd)
+            timeLeftExact = max(0, timeLeftExact - clockDt)
             // Publish only when the displayed second changes — the HUD
             // timer no longer forces a SwiftUI re-render on every frame.
             let displaySeconds = timeLeftExact.rounded(.up)
@@ -97,7 +111,7 @@ extension GameController {
             duelBotNetTick(dt: dt)
             if !isMatchOver {
                 matchAuthority?.tick(
-                    dt: dtd,
+                    dt: clockDt,
                     remaining: timeLeftExact,
                     orange: grid.orangeCount,
                     purple: grid.purpleCount,
@@ -122,6 +136,7 @@ extension GameController {
         updateSniperLaser()
         updateAimLock(container: playerContainer)
         updateNameTagsThrottled(dt: dt, camera: camera)
+        updateCharacterLODThrottled(dt: dt, camera: camera)
 
         // Merge tiles painted since the last flush into their chunk meshes,
         // throttled by the active quality preset's `paintRebuildInterval` so
@@ -167,6 +182,12 @@ extension GameController {
         activeQuality = activeQuality.oneStepDown
         qualitySettings = .settings(for: activeQuality)
         projectileCap = qualitySettings.projectileCap
+        // Everything the new preset can still change on an already-built scene:
+        // decor, lights, splash detail, character LOD. Without this the
+        // downgrade only affected the knobs read live each frame, leaving the
+        // heaviest offenders (dynamic lights, decorative geometry) in place on
+        // the very device that just told us it can't cope.
+        reapplyRuntimeQuality()
         qualityDowngradeNotice = "Qualité ajustée pour préserver la fluidité"
         qualityNoticeTimer = 3
     }

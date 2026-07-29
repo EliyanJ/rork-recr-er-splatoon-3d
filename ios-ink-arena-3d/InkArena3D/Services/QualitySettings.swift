@@ -97,6 +97,19 @@ struct QualitySettings {
     /// arena, which is the single biggest GPU saving available on the lightest
     /// tiers. The art direction is already flat/cartoon, so the loss is minor.
     let unlitArena: Bool
+    /// Distance (metres, camera → character) past which a fighter's skeletal
+    /// animation is paused. Skinning is the most expensive per-frame cost per
+    /// character; a body 40 m away is a few dozen pixels tall, so a frozen pose
+    /// is indistinguishable. Gameplay is untouched — the character keeps moving,
+    /// shooting and taking damage, only the limb animation holds.
+    let animationCullDistance: Float
+    /// Distance past which the floating pseudo is hidden. Unreadable at range
+    /// anyway, and each tag costs a billboard update plus two draw calls (one of
+    /// them blended).
+    let nameTagCullDistance: Float
+    /// Distance past which the blob shadow under a fighter is hidden — a
+    /// transparent draw call that reads as a dark dot at range.
+    let blobShadowCullDistance: Float
     let vfx: VFXLevel
     /// Cap on the DECORATIVE-only transient VFX layer (the drifting mist
     /// puff after a hit). The hit splash + hitmarker flash — the feedback
@@ -130,6 +143,9 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: false,
+                animationCullDistance: .greatestFiniteMagnitude,
+                nameTagCullDistance: .greatestFiniteMagnitude,
+                blobShadowCullDistance: .greatestFiniteMagnitude,
                 vfx: .full,
                 transientVFXBudget: 60
             )
@@ -147,6 +163,9 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: false,
+                animationCullDistance: 55,
+                nameTagCullDistance: 48,
+                blobShadowCullDistance: 55,
                 vfx: .full,
                 transientVFXBudget: 45
             )
@@ -164,6 +183,9 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: true,
+                animationCullDistance: 34,
+                nameTagCullDistance: 30,
+                blobShadowCullDistance: 32,
                 vfx: .reduced,
                 transientVFXBudget: 30
             )
@@ -181,6 +203,9 @@ struct QualitySettings {
                 nameTagsEnabled: false,
                 simplifiedSkybox: true,
                 unlitArena: true,
+                animationCullDistance: 22,
+                nameTagCullDistance: 0,
+                blobShadowCullDistance: 20,
                 vfx: .minimal,
                 transientVFXBudget: 20
             )
