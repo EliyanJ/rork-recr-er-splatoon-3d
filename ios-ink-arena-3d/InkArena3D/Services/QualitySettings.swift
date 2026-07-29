@@ -99,9 +99,14 @@ struct QualitySettings {
     let unlitArena: Bool
     /// Distance (metres, camera → character) past which a fighter's skeletal
     /// animation is paused. Skinning is the most expensive per-frame cost per
-    /// character; a body 40 m away is a few dozen pixels tall, so a frozen pose
-    /// is indistinguishable. Gameplay is untouched — the character keeps moving,
-    /// shooting and taking damage, only the limb animation holds.
+    /// character. Gameplay is untouched — the character keeps moving, shooting
+    /// and taking damage, only the limb animation holds.
+    ///
+    /// Deliberately conservative: a frozen body reads as a bug the moment the
+    /// player can make out its limbs, and players DO watch distant enemies in a
+    /// shooter. These thresholds sit past the range where a walk cycle is
+    /// legible, so the saving only ever applies to fighters at the far end of
+    /// the arena. Never freezes the local player.
     let animationCullDistance: Float
     /// Distance past which the floating pseudo is hidden. Unreadable at range
     /// anyway, and each tag costs a billboard update plus two draw calls (one of
@@ -163,7 +168,7 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: false,
-                animationCullDistance: 55,
+                animationCullDistance: 78,
                 nameTagCullDistance: 48,
                 blobShadowCullDistance: 55,
                 vfx: .full,
@@ -183,7 +188,7 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: true,
-                animationCullDistance: 34,
+                animationCullDistance: 52,
                 nameTagCullDistance: 30,
                 blobShadowCullDistance: 32,
                 vfx: .reduced,
@@ -203,7 +208,7 @@ struct QualitySettings {
                 nameTagsEnabled: false,
                 simplifiedSkybox: true,
                 unlitArena: true,
-                animationCullDistance: 22,
+                animationCullDistance: 38,
                 nameTagCullDistance: 0,
                 blobShadowCullDistance: 20,
                 vfx: .minimal,

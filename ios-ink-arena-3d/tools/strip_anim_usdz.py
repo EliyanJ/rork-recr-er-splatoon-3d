@@ -6,29 +6,44 @@ texture ~2.3 MB). After the chantier 1 animation refactor, the runtime replays
 the clip's `AnimationResource` directly on the character's shared base model, so
 the mesh/material/texture inside each *-anim-* clip is dead weight (~6 MB each).
 
-This tool keeps only what an `AnimationResource` needs — the `SkelRoot`,
-`Skeleton` and `SkelAnimation` prims — and drops every `Mesh`, `Material` and
-`Shader`, plus the packaged `textures/` folder. Result: ~6 MB -> <1 MB per clip.
+!!! REGRESSION HISTORY — READ BEFORE USING !!!
+
+Removing every Mesh prim BREAKS ALL ANIMATION IN THE GAME. RealityKit only
+exposes a skeletal animation through `entity.availableAnimations` when the USDZ
+still contains a mesh bound to the skeleton. With the mesh gone the package
+still validates at the USD level (Skeleton + SkelAnimation are intact, joint
+order unchanged), so this tool's own verification passed — but at runtime
+`availableAnimations` came back EMPTY, no clip was ever cached, and every
+character slid around the arena in a frozen pose with no error logged.
+
+Therefore mesh removal is NO LONGER THE DEFAULT. The default now collapses each
+skinned mesh to a single degenerate triangle that stays bound to the skeleton:
+nearly the same size saving, but the structure RealityKit requires survives.
+USD-level verification CANNOT prove a clip still animates in RealityKit — any
+change here must be confirmed on a real device before shipping.
 
 Usage:
     pip install usd-core
     python3 strip_anim_usdz.py --resources ../InkArena3D/Resources
     python3 strip_anim_usdz.py --resources ../InkArena3D/Resources --dry-run
-    python3 strip_anim_usdz.py --resources ../InkArena3D/Resources --keep-dummy-mesh
 
 Flags:
     --resources PATH   Folder holding the *-anim-*.usdz clips (required).
     --pattern GLOB      Which files to process (default "*-anim-*.usdz").
+    --exclude GLOB      Files to skip, repeatable. Defaults to
+                        "*-anim-idle.usdz": the base character models are static
+                        (no skeleton), so the rigged idle clip IS the animatable
+                        body that gets cloned and displayed. Stripping its mesh
+                        would leave invisible characters, so a plain run can
+                        never touch them.
     --dry-run           Report what would change; write nothing.
-    --keep-dummy-mesh   Plan B: instead of removing every mesh, replace the
-                        skinned mesh with a single degenerate triangle still
-                        bound to the skeleton. Use only if RealityKit refuses a
-                        mesh-less skeleton USDZ (test on ONE file first).
+    --remove-mesh       Drop every Mesh prim entirely. KNOWN BROKEN at runtime
+                        (see above). Kept only for experimentation.
     --backup            Copy each original to <name>.usdz.bak before writing.
 
 Safety: every rewritten package is re-opened and verified to still expose a
-`UsdSkelAnimation` whose joint order matches the original. A clip that fails
-verification is left untouched and reported as an error.
+`UsdSkelAnimation` whose joint order matches the original, AND (unless
+--remove-mesh) to still carry a skeleton-bound mesh.
 """
 
 from __future__ import annotations
@@ -67,6 +82,15 @@ def has_skel_animation(stage: "Usd.Stage") -> bool:
     return False
 
 
+def has_skinned_mesh(stage: "Usd.Stage") -> bool:
+    """True when a Mesh bound to the skeleton survives — RealityKit needs one to
+    expose the clip through `availableAnimations`."""
+    for prim in stage.Traverse():
+        if prim.IsA(UsdGeom.Mesh) and prim.HasAPI(UsdSkel.BindingAPI):
+            return True
+    return False
+
+
 def strip_stage(stage: "Usd.Stage", keep_dummy_mesh: bool) -> None:
     """Remove mesh/material/shader prims from `stage` in place."""
     to_remove: list[str] = []
@@ -86,31 +110,51 @@ def strip_stage(stage: "Usd.Stage", keep_dummy_mesh: bool) -> None:
             # animation clip needs none of them.
             to_remove.append(prim.GetPath().pathString)
 
-    if keep_dummy_mesh:
-        # Collapse every skinned mesh to a single degenerate triangle. The
-        # SkelBindingAPI (jointIndices/jointWeights) is re-authored so the lone
-        # triangle stays bound to joint 0 — enough for RealityKit to treat the
-        # asset as a skinned model while adding ~0 bytes.
-        for path in dummy_targets:
-            mesh = UsdGeom.Mesh(stage.GetPrimAtPath(path))
-            mesh.GetPointsAttr().Set(
-                Vt.Vec3fArray([Gf.Vec3f(0, 0, 0), Gf.Vec3f(0, 0, 0), Gf.Vec3f(0, 0, 0)])
-            )
-            mesh.GetFaceVertexCountsAttr().Set(Vt.IntArray([3]))
-            mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray([0, 1, 2]))
-            if mesh.GetNormalsAttr().HasAuthoredValue():
-                mesh.GetNormalsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(0, 1, 0)] * 3))
-            binding = UsdSkel.BindingAPI(mesh.GetPrim())
-            binding.CreateJointIndicesPrimvar(constant=False, elementSize=1).Set(
-                Vt.IntArray([0, 0, 0])
-            )
-            binding.CreateJointWeightsPrimvar(constant=False, elementSize=1).Set(
-                Vt.FloatArray([1.0, 1.0, 1.0])
-            )
-    else:
-        # Remove deepest paths first so parents still exist when children go.
-        for path in sorted(to_remove, key=lambda p: p.count("/"), reverse=True):
-            stage.RemovePrim(Sdf.Path(path))
+    # Collapse every skinned mesh to a single degenerate triangle. The
+    # SkelBindingAPI (jointIndices/jointWeights) is re-authored so the lone
+    # triangle stays bound to joint 0 — enough for RealityKit to treat the
+    # asset as a skinned model while adding ~0 bytes.
+    for path in dummy_targets:
+        prim = stage.GetPrimAtPath(path)
+        mesh = UsdGeom.Mesh(prim)
+        mesh.GetPointsAttr().Set(
+            Vt.Vec3fArray([Gf.Vec3f(0, 0, 0), Gf.Vec3f(0, 0, 0), Gf.Vec3f(0, 0, 0)])
+        )
+        mesh.GetFaceVertexCountsAttr().Set(Vt.IntArray([3]))
+        mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray([0, 1, 2]))
+        if mesh.GetNormalsAttr().HasAuthoredValue():
+            mesh.GetNormalsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(0, 1, 0)] * 3))
+        binding = UsdSkel.BindingAPI(prim)
+        binding.CreateJointIndicesPrimvar(constant=False, elementSize=1).Set(
+            Vt.IntArray([0, 0, 0])
+        )
+        binding.CreateJointWeightsPrimvar(constant=False, elementSize=1).Set(
+            Vt.FloatArray([1.0, 1.0, 1.0])
+        )
+        # Drop the UV set and any other leftover primvar: they still hold
+        # per-vertex arrays for the original dense mesh (megabytes) and are
+        # meaningless now that the geometry is one triangle. The two skinning
+        # primvars must survive — they are what keeps the mesh bound.
+        keep = {"primvars:skel:jointIndices", "primvars:skel:jointWeights"}
+        for primvar in UsdGeom.PrimvarsAPI(prim).GetPrimvars():
+            name = primvar.GetName()
+            if name not in keep:
+                prim.RemoveProperty(name)
+        # A material binding would re-reference the textures we are removing,
+        # which is exactly what made CreateNewUsdzPackage fail.
+        UsdShade.MaterialBindingAPI(prim).UnbindAllBindings()
+        # GeomSubsets exist only to bind per-face materials; their face-index
+        # arrays are sized for the original mesh.
+        for child in prim.GetChildren():
+            if child.IsA(UsdGeom.Subset):
+                to_remove.append(child.GetPath().pathString)
+
+    # Always strip materials, shaders and lights — in dummy-mesh mode too.
+    # Leaving them behind keeps the textures/*.png references alive, and
+    # CreateNewUsdzPackage then fails because those files are not on disk.
+    # Remove deepest paths first so parents still exist when children go.
+    for path in sorted(to_remove, key=lambda p: p.count("/"), reverse=True):
+        stage.RemovePrim(Sdf.Path(path))
 
 
 def process_clip(
@@ -168,6 +212,10 @@ def process_clip(
             return False, "verification failed: no animation after strip"
         if joint_signature(check) != original_joints:
             return False, "verification failed: joint order changed"
+        # The check that would have caught the frozen-character regression:
+        # without a skeleton-bound mesh RealityKit exposes no animation at all.
+        if keep_dummy_mesh and not has_skinned_mesh(check):
+            return False, "verification failed: no skeleton-bound mesh survived"
 
         if backup:
             shutil.copy2(usdz_path, usdz_path + ".bak")
@@ -185,10 +233,27 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--resources", required=True, help="Folder with the clips")
     parser.add_argument("--pattern", default="*-anim-*.usdz")
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=None,
+        help="Glob of files to skip (repeatable). Default: *-anim-idle.usdz",
+    )
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--keep-dummy-mesh", action="store_true")
+    parser.add_argument(
+        "--remove-mesh",
+        action="store_true",
+        help="Drop Mesh prims entirely. KNOWN BROKEN at runtime.",
+    )
     parser.add_argument("--backup", action="store_true")
     args = parser.parse_args()
+    # Inverted default: keeping a skeleton-bound dummy mesh is the safe mode.
+    keep_dummy_mesh = not args.remove_mesh
+    if args.remove_mesh:
+        print(
+            "WARNING: --remove-mesh produced characters with NO animation at "
+            "runtime. Verify on a real device before shipping.\n"
+        )
 
     import fnmatch
 
@@ -196,11 +261,15 @@ def main() -> int:
     if not os.path.isdir(resources):
         return int(bool(sys.stderr.write(f"Not a directory: {resources}\n")))
 
+    excludes = args.exclude if args.exclude is not None else ["*-anim-idle.usdz"]
     clips = sorted(
         os.path.join(resources, f)
         for f in os.listdir(resources)
         if fnmatch.fnmatch(f, args.pattern)
+        and not any(fnmatch.fnmatch(f, e) for e in excludes)
     )
+    if excludes:
+        print(f"Excluding: {', '.join(excludes)}")
     if not clips:
         print(f"No files matching {args.pattern!r} in {resources}")
         return 0
@@ -213,7 +282,7 @@ def main() -> int:
         before = os.path.getsize(path)
         total_before += before
         ok, message = process_clip(
-            path, args.keep_dummy_mesh, args.dry_run, args.backup
+            path, keep_dummy_mesh, args.dry_run, args.backup
         )
         total_after += os.path.getsize(path)
         status = "OK " if ok else "ERR"

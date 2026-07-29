@@ -1,3 +1,4 @@
+import Foundation
 import RealityKit
 
 /// Process-wide cache of animation clips, keyed by resource name.
@@ -47,15 +48,21 @@ final class AnimationClipStore {
             return
         }
         let task = Task { @MainActor in
-            guard let entity = try? await Entity(named: name) else { return }
-            guard let anim = entity.availableAnimations.first else { return }
+            guard let entity = try? await Entity(named: name) else {
+                NSLog("[AnimClipStore] MISSING RESOURCE: \(name) is not in the bundle — character will slide without animation")
+                return
+            }
+            // A clip that loads but exposes no animation leaves the character
+            // sliding in a frozen pose with no other symptom, so this must be
+            // loud. RealityKit only surfaces a skeletal animation when the USDZ
+            // still contains a mesh bound to the skeleton: an asset pipeline
+            // that drops the mesh silently kills every animation in the game.
+            guard let anim = entity.availableAnimations.first else {
+                let hasSkinnedMesh = Self.findSkinnedModel(in: entity) != nil
+                NSLog("[AnimClipStore] NO ANIMATION in \(name) (skinned mesh present: \(hasSkinnedMesh)) — character will slide without animation")
+                return
+            }
             clips[name] = anim
-            // Only record a signature when the clip still carries a skinned
-            // mesh. Production clips are stripped to skeleton + animation only
-            // (see tools/strip_anim_usdz.py), so they expose no skinned model
-            // and no signature — the rig-match check then simply trusts them
-            // (a stripped clip is derived from the correct source and can't
-            // carry the wrong rig). Un-stripped dev clips still get validated.
             if let joints = Self.findSkinnedModel(in: entity)?.jointNames {
                 jointSignatures[name] = joints
             }
