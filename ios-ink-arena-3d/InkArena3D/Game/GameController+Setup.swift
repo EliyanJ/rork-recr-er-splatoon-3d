@@ -64,7 +64,12 @@ extension GameController {
             dropPool.append(entity)
         }
 
-        mats = await ArenaMaterials.load()
+        // Only the active map's textures are decoded — the training range is
+        // built entirely from flat colors, so it needs none at all.
+        mats = await ArenaMaterials.load(
+            names: isTraining ? [] : activeMapTextureNames,
+            unlit: qualitySettings.unlitArena
+        )
         buildLights(root)
         if isTraining {
             addTrainingSkyDome(root)

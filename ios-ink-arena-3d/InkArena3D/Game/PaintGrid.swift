@@ -187,22 +187,31 @@ final class PaintGrid {
         splashGeometries = (0..<6).map {
             PaintGrid.generateSplashGeometry(seed: UInt64($0) &+ 17, baseRadius: baseRadius, height: 0.012, pointCount: pointCount)
         }
-        // Single-winding triangles (half the indices of the old both-winding
-        // shape) rendered with face culling disabled, so the splat still
-        // reads correctly from any angle without doubling the triangle count.
+        // Paint is a flat decal lying on the ground: only the upward-facing cap
+        // exists (see `generateSplashGeometry`), wound counter-clockwise as seen
+        // from above, so standard back-face culling is both correct AND cheaper.
+        // The old `.none` culling was only needed because the splat used to be a
+        // closed extruded solid whose down-facing cap and side skirt were never
+        // visible yet still rasterized.
         orangeMaterial = UnlitMaterial(color: Team.orange.uiColor)
         purpleMaterial = UnlitMaterial(color: Team.purple.uiColor)
-        orangeMaterial.faceCulling = .none
-        purpleMaterial.faceCulling = .none
+        orangeMaterial.faceCulling = .back
+        purpleMaterial.faceCulling = .back
     }
 
-    /// Builds a star/splash-shaped extruded geometry: a closed ring of points
-    /// whose radius wobbles (and occasionally spikes outward, like an ink arm)
-    /// around `baseRadius`, capped top/bottom and skinned on the sides.
-    /// Triangles use a single, correct winding order — the paint materials
-    /// disable face culling, so there's no need to double every triangle to
-    /// cover both winding directions (half the vertex/index count for the
-    /// same visual result).
+    /// Builds a star/splash-shaped FLAT decal: a closed ring of points whose
+    /// radius wobbles (and occasionally spikes outward, like an ink arm) around
+    /// `baseRadius`, filled by a single triangle fan facing straight up.
+    ///
+    /// PERFORMANCE — this used to be a closed extruded solid (top cap + bottom
+    /// cap + side skirt = 4× these triangles) rendered with face culling off.
+    /// The splat sits 0.012 above the ground and is only ever seen from above,
+    /// so the bottom cap and the side skirt were 100% invisible while still
+    /// being rasterized on every merged chunk mesh — and the bottom cap, poking
+    /// through the floor, was a z-fighting source. Keeping only the top cap cuts
+    /// the triangle count, the vertex count, and the per-chunk merge cost by ~4×.
+    /// The fan is wound counter-clockwise seen from +Y so the geometric normal is
+    /// up and back-face culling keeps it visible.
     private static func generateSplashGeometry(seed: UInt64, baseRadius: Float, height: Float, pointCount: Int) -> SplashGeometry {
         var rng = SplitMix64(seed: seed)
         var topPoints: [SIMD3<Float>] = []
@@ -214,8 +223,6 @@ final class PaintGrid {
             }
             topPoints.append(SIMD3<Float>(cos(angle) * r, height, sin(angle) * r))
         }
-        let bottomPoints = topPoints.map { SIMD3<Float>($0.x, 0, $0.z) }
-
         var positions: [SIMD3<Float>] = []
         var normals: [SIMD3<Float>] = []
         var uvs: [SIMD2<Float>] = []
@@ -235,44 +242,12 @@ final class PaintGrid {
             let angle = Float(i) / Float(pointCount) * 2 * .pi
             uvs.append([0.5 + cos(angle) * 0.5, 0.5 + sin(angle) * 0.5])
         }
+        // Wound (center, next, current) so the cross product points +Y — the
+        // opposite order would face the fan downward into the floor.
         for i in 0..<pointCount {
             let a = topStart + UInt32(i)
             let b = topStart + UInt32((i + 1) % pointCount)
-            addTriangle(centerTopIndex, a, b)
-        }
-
-        // Bottom cap.
-        let centerBottomIndex = UInt32(positions.count)
-        positions.append([0, 0, 0]); normals.append([0, -1, 0]); uvs.append([0.5, 0.5])
-        let bottomStart = UInt32(positions.count)
-        for i in 0..<pointCount {
-            positions.append(bottomPoints[i])
-            normals.append([0, -1, 0])
-            let angle = Float(i) / Float(pointCount) * 2 * .pi
-            uvs.append([0.5 + cos(angle) * 0.5, 0.5 + sin(angle) * 0.5])
-        }
-        for i in 0..<pointCount {
-            let a = bottomStart + UInt32(i)
-            let b = bottomStart + UInt32((i + 1) % pointCount)
-            addTriangle(centerBottomIndex, b, a)
-        }
-
-        // Side skin connecting top ring to bottom ring.
-        let sideStart = UInt32(positions.count)
-        for i in 0..<pointCount {
-            let angle = Float(i) / Float(pointCount) * 2 * .pi
-            let normal = SIMD3<Float>(cos(angle), 0, sin(angle))
-            positions.append(topPoints[i]); normals.append(normal); uvs.append([Float(i) / Float(pointCount), 1])
-            positions.append(bottomPoints[i]); normals.append(normal); uvs.append([Float(i) / Float(pointCount), 0])
-        }
-        for i in 0..<pointCount {
-            let next = (i + 1) % pointCount
-            let topA = sideStart + UInt32(i * 2)
-            let botA = sideStart + UInt32(i * 2 + 1)
-            let topB = sideStart + UInt32(next * 2)
-            let botB = sideStart + UInt32(next * 2 + 1)
-            addTriangle(topA, botA, topB)
-            addTriangle(botA, botB, topB)
+            addTriangle(centerTopIndex, b, a)
         }
 
         return SplashGeometry(positions: positions, normals: normals, uvs: uvs, indices: indices)

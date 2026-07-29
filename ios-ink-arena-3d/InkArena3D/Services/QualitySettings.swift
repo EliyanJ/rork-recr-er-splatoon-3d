@@ -91,6 +91,12 @@ struct QualitySettings {
     let nameTagsEnabled: Bool
     /// Flat unlit color instead of the panoramic sky dome texture.
     let simplifiedSkybox: Bool
+    /// Renders the static arena (floor, walls, platforms, ramps, blocks) with
+    /// `UnlitMaterial` instead of `PhysicallyBasedMaterial`. Same textures, same
+    /// silhouette — but zero per-fragment lighting evaluation across the whole
+    /// arena, which is the single biggest GPU saving available on the lightest
+    /// tiers. The art direction is already flat/cartoon, so the loss is minor.
+    let unlitArena: Bool
     let vfx: VFXLevel
     /// Cap on the DECORATIVE-only transient VFX layer (the drifting mist
     /// puff after a hit). The hit splash + hitmarker flash — the feedback
@@ -123,6 +129,7 @@ struct QualitySettings {
                 decorEnabled: true,
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
+                unlitArena: false,
                 vfx: .full,
                 transientVFXBudget: 60
             )
@@ -139,6 +146,7 @@ struct QualitySettings {
                 decorEnabled: true,
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
+                unlitArena: false,
                 vfx: .full,
                 transientVFXBudget: 45
             )
@@ -155,6 +163,7 @@ struct QualitySettings {
                 decorEnabled: false,
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
+                unlitArena: true,
                 vfx: .reduced,
                 transientVFXBudget: 30
             )
@@ -171,6 +180,7 @@ struct QualitySettings {
                 decorEnabled: false,
                 nameTagsEnabled: false,
                 simplifiedSkybox: true,
+                unlitArena: true,
                 vfx: .minimal,
                 transientVFXBudget: 20
             )

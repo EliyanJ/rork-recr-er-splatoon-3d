@@ -801,6 +801,38 @@ final class GameController {
         }
     }
 
+    /// Exactly the textures the active map's builders will ask for.
+    ///
+    /// PERFORMANCE — `ArenaMaterials.load()` used to decode the union of EVERY
+    /// map's texture set (28 names) on every scene setup, so a Nexus Docks match
+    /// paid for the Temple set too (and for the cheese/port names, which have no
+    /// bundled asset at all and just cost a failed lookup each). Loading only
+    /// this list roughly halves both the texture memory held for the match and
+    /// the setup decode time, with zero visual difference.
+    ///
+    /// The last three are referenced directly (not through a per-map accessor)
+    /// by the city backdrop, the holo screens and the giant paint pots.
+    var activeMapTextureNames: [String] {
+        var names: [String] = [
+            floorTextureName,
+            perimeterTextureName,
+            platformTextureName,
+            rampTextureName,
+            blockTextureName,
+            skylineTextureName,
+            ArenaMaterials.containerName,
+            ArenaMaterials.skylineName,
+            ArenaMaterials.billboardName,
+        ]
+        // The lightest preset paints the dome with a flat color, so its
+        // panorama (the single largest texture) is never sampled.
+        if !qualitySettings.simplifiedSkybox {
+            names.append(skyTextureName)
+        }
+        var seen: Set<String> = []
+        return names.filter { seen.insert($0).inserted }
+    }
+
     // MARK: Per-map fallback / accent colors
     // Pulled through accessors so the shared builders (arena, water, lights,
     // sky) stay identical in structure while switching look per map.

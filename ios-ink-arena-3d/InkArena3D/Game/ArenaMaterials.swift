@@ -43,19 +43,38 @@ final class ArenaMaterials {
 
     private var textures: [String: TextureResource] = [:]
 
+    /// When true, `pbr(...)` hands back an `UnlitMaterial` instead of a
+    /// `PhysicallyBasedMaterial` — same texture and tiling, no per-fragment
+    /// lighting. Driven by `QualitySettings.unlitArena`.
+    private var prefersUnlit = false
+
+    /// Every texture name known to the game, all maps combined.
+    static let allNames: [String] = [
+        asphaltName, graffitiName, containerName, towerName,
+        grateName, skyName, skylineName, billboardName,
+        templeFloorName, templeWallName, templeTechName,
+        templePlanksName, jungleSkyName, jungleSkylineName,
+        cheeseFloorName, cheeseWallName, cheeseMetalName,
+        cheesePlanksName, cheeseRindName, cheeseSkyName, cheeseSkylineName,
+        portFloorName, portWallName, portMetalName, portPlanksName,
+        portRopeName, portSkyName, portSkylineName,
+    ]
+
     /// Loads every bundled arena texture. Missing assets are simply skipped.
+    ///
+    /// Prefer `load(names:)` with the active map's set — decoding all 28 names
+    /// holds textures for maps that are not being played (see
+    /// `GameController.activeMapTextureNames`).
     static func load() async -> ArenaMaterials {
+        await load(names: allNames)
+    }
+
+    /// Loads only `names`. Any missing asset is skipped, and every accessor
+    /// falls back to a flat color, so an incomplete set still builds the arena.
+    static func load(names: [String], unlit: Bool = false) async -> ArenaMaterials {
         let materials = ArenaMaterials()
-        let names = [
-            asphaltName, graffitiName, containerName, towerName,
-            grateName, skyName, skylineName, billboardName,
-            templeFloorName, templeWallName, templeTechName,
-            templePlanksName, jungleSkyName, jungleSkylineName,
-            cheeseFloorName, cheeseWallName, cheeseMetalName,
-            cheesePlanksName, cheeseRindName, cheeseSkyName, cheeseSkylineName,
-            portFloorName, portWallName, portMetalName, portPlanksName,
-            portRopeName, portSkyName, portSkylineName,
-        ]
+        materials.prefersUnlit = unlit
+        guard !names.isEmpty else { return materials }
         // Decode every texture in parallel. Each child task is @MainActor for
         // safe dictionary access, but `TextureResource(named:)` does its heavy
         // work off the main thread, so the decodes still overlap.
@@ -73,6 +92,11 @@ final class ArenaMaterials {
     }
 
     /// Textured PBR material with tiling, or a flat fallback color.
+    ///
+    /// On the `unlitArena` presets this returns an unlit equivalent instead:
+    /// identical texture and tiling, but the fragment shader skips all lighting
+    /// work. Since the whole static arena goes through this accessor, that is
+    /// the largest single GPU saving available on low-end hardware.
     func pbr(
         _ name: String,
         tint: UIColor = .white,
@@ -81,7 +105,14 @@ final class ArenaMaterials {
         fallback: UIColor
     ) -> any RealityKit.Material {
         guard let texture = textures[name] else {
+            if prefersUnlit { return UnlitMaterial(color: fallback) }
             return SimpleMaterial(color: fallback, roughness: .init(floatLiteral: roughness), isMetallic: false)
+        }
+        if prefersUnlit {
+            var material = UnlitMaterial()
+            material.color = .init(tint: tint, texture: .init(texture))
+            material.textureCoordinateTransform = .init(scale: scale)
+            return material
         }
         var material = PhysicallyBasedMaterial()
         material.baseColor = .init(tint: tint, texture: .init(texture))
