@@ -143,10 +143,17 @@ extension GameController {
         // a continuous jet doesn't force a mesh rebuild every single frame
         // (ownership + coverage already updated instantly when painted, only
         // this visual merge is paced).
-        paintFlushAccum += dt
-        if paintFlushAccum >= qualitySettings.paintRebuildInterval {
-            paintFlushAccum = 0
-            grid.flushPaintBatches(maxRebuilds: qualitySettings.maxChunkRebuildsPerFlush)
+        if grid.usesTexturePaint {
+            // Texture paint: no mesh is ever rebuilt. Only the rectangle of the
+            // ink image touched since the last tick goes to the GPU — a cost
+            // that stays flat from 0% to 100% coverage.
+            grid.flushCanvas(dt: dt)
+        } else {
+            paintFlushAccum += dt
+            if paintFlushAccum >= qualitySettings.paintRebuildInterval {
+                paintFlushAccum = 0
+                grid.flushPaintBatches(maxRebuilds: qualitySettings.maxChunkRebuildsPerFlush)
+            }
         }
         refreshPaintPerfDebug(grid: grid)
     }

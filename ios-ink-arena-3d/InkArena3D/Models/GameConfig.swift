@@ -18,6 +18,15 @@ enum GameConfig {
     /// batched cost against the old design during a match.
     static var paintPerfDebug = false
 
+    /// Paint is drawn as ONE textured quad over the floor (`PaintCanvas` +
+    /// `PaintCanvasSurface`) instead of merged per-chunk splat meshes.
+    ///
+    /// The mesh path's cost grew with coverage — every splat enlarged the chunk
+    /// mesh that had to be regenerated, so matches started smooth and ended
+    /// stuttering. Writing pixels costs the same at 2% and at 98%. Flip to
+    /// `false` to fall back to the (still present) geometry path.
+    static let texturePaint = true
+
     /// Arena selected for the next match — set from the loadout screen
     /// BEFORE the GameController is created, so every dimension-derived
     /// value (spawns, grid, walls) picks up the right footprint.

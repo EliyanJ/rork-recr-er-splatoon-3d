@@ -161,12 +161,17 @@ final class PaintGrid {
     private var orangeMaterial: UnlitMaterial
     private var purpleMaterial: UnlitMaterial
 
-    // MARK: Texture-based paint (step 1 — buffer only, not displayed yet)
-    /// Top-down RGBA image of the arena's ink, written alongside the mesh
-    /// splats. It costs the same per shot whatever the coverage, whereas the
-    /// merged chunk meshes get heavier as the match fills up. Nothing samples
-    /// it yet: this step only proves the writes are correct and free.
+    // MARK: Texture-based paint
+    /// Top-down RGBA image of the arena's ink. It costs the same per shot
+    /// whatever the coverage, whereas the merged chunk meshes get heavier as
+    /// the match fills up.
     let canvas: PaintCanvas
+    /// The single textured quad displaying `canvas` over the floor. When it
+    /// exists it IS the paint: no chunk slot is ever marked dirty, so no splat
+    /// geometry is merged or generated (see `markDirty`). nil only if
+    /// `GameConfig.texturePaint` is off or Metal setup failed, in which case
+    /// the geometry path stays in charge.
+    private var canvasSurface: PaintCanvasSurface?
     private let orangeInk: SIMD4<UInt8>
     private let purpleInk: SIMD4<UInt8>
     private let heightAt: (Float, Float) -> Float
@@ -283,6 +288,27 @@ final class PaintGrid {
         purpleMaterial = UnlitMaterial(color: Team.purple.uiColor)
         orangeMaterial.faceCulling = .back
         purpleMaterial.faceCulling = .back
+        if GameConfig.texturePaint {
+            canvasSurface = PaintCanvasSurface(
+                canvas: canvas,
+                arenaWidth: GameConfig.arenaWidth,
+                arenaDepth: GameConfig.arenaDepth
+            )
+            if let canvasSurface {
+                root.addChild(canvasSurface.entity)
+            } else {
+                NSLog("[PaintGrid] texture paint unavailable — falling back to merged splat meshes")
+            }
+        }
+    }
+
+    /// True while the textured quad is what the player actually sees.
+    var usesTexturePaint: Bool { canvasSurface != nil }
+
+    /// Pushes any ink painted since the last tick to the GPU. Called once per
+    /// frame from the simulation loop; no-op on the geometry path.
+    func flushCanvas(dt: Float) {
+        canvasSurface?.uploadIfNeeded(dt: dt)
     }
 
     /// Straight RGBA bytes of a team color, for direct writes into the canvas.
@@ -416,6 +442,10 @@ final class PaintGrid {
     /// Marks one (chunk, team) slot dirty. New slots are appended to the FIFO
     /// queue so the per-flush budget drains them in order without starvation.
     private func markDirty(chunk: Int, team: Team) {
+        // Texture paint owns the visuals: never queue a chunk merge. This is
+        // what removes the rebuild cost entirely rather than just pacing it —
+        // the geometry code below stays intact but is never reached.
+        guard canvasSurface == nil else { return }
         let slot = chunk * 2 + teamSlot(team)
         if dirtySlots.insert(slot).inserted {
             dirtyQueue.append(slot)
