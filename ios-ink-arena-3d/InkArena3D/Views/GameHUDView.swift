@@ -8,6 +8,14 @@ struct GameHUDView: View {
     @State private var isSettingsVisible = false
 
     var body: some View {
+        // Timed as a subsystem: SwiftUI rebuilds this tree on the main thread,
+        // in the same frame budget as the simulation, so a HUD that re-renders
+        // too often is indistinguishable from "the renderer is slow" until it
+        // is measured separately. Free when no trace is running.
+        PerfRecorder.shared.measure(.hud) { hudContent }
+    }
+
+    private var hudContent: some View {
         ZStack {
             DamageVignette(controller: controller)
 

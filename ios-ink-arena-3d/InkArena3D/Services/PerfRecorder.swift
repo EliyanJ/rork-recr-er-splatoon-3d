@@ -17,6 +17,8 @@ nonisolated enum PerfSection: Int, CaseIterable {
     case lod
     case scoring
     case network
+    case hud
+    case animation
 
     var label: String {
         switch self {
@@ -31,6 +33,8 @@ nonisolated enum PerfSection: Int, CaseIterable {
         case .lod: "LOD personnages"
         case .scoring: "Score / zones"
         case .network: "Réseau (duel)"
+        case .hud: "Interface (SwiftUI)"
+        case .animation: "Animations (clips)"
         }
     }
 }
@@ -79,6 +83,13 @@ final class PerfRecorder {
     private var frameTimes: [Double] = []
     private static let maxFrames = 12_000
     private var droppedFrameSamples = 0
+    /// Frames ignored at the start of a trace. The first images of a match
+    /// pay for lazy Metal pipeline compilation, texture residency and the
+    /// first animation clip binding — one-off costs that used to dominate the
+    /// "worst frame" column and hide the real steady-state behaviour.
+    private static let warmupFrames = 60
+    private var warmupRemaining = PerfRecorder.warmupFrames
+    private var isWarm: Bool { warmupRemaining == 0 }
 
     private var sectionTotals = [Double](repeating: 0, count: PerfSection.allCases.count)
     private var sectionWorst = [Double](repeating: 0, count: PerfSection.allCases.count)
@@ -112,6 +123,7 @@ final class PerfRecorder {
         frameTimes.removeAll(keepingCapacity: true)
         frameTimes.reserveCapacity(Self.maxFrames)
         droppedFrameSamples = 0
+        warmupRemaining = Self.warmupFrames
         for i in sectionTotals.indices {
             sectionTotals[i] = 0
             sectionWorst[i] = 0
@@ -150,7 +162,7 @@ final class PerfRecorder {
     @inline(__always)
     @discardableResult
     func measure<T>(_ section: PerfSection, _ body: () -> T) -> T {
-        guard isRecording else { return body() }
+        guard isRecording, isWarm else { return body() }
         let start = CACurrentMediaTime()
         let result = body()
         let cost = CACurrentMediaTime() - start
@@ -164,6 +176,10 @@ final class PerfRecorder {
     /// Records one displayed frame plus, at 1 Hz, a process CPU/RAM sample.
     func noteFrame(rawDt: Float) {
         guard isRecording else { return }
+        guard isWarm else {
+            warmupRemaining -= 1
+            return
+        }
         if frameTimes.count < Self.maxFrames {
             frameTimes.append(Double(rawDt))
         } else {
@@ -215,6 +231,7 @@ final class PerfRecorder {
         lines.append("")
         lines.append("-- IMAGES --")
         lines.append("Durée mesurée: \(String(format: "%.0f", duration)) s · \(sorted.count) images\(droppedFrameSamples > 0 ? " (+\(droppedFrameSamples) non échantillonnées)" : "")")
+        lines.append("(\(Self.warmupFrames) images de chauffe exclues — compilation shaders, chargement textures)")
         lines.append("FPS moyen: \(String(format: "%.1f", 1 / avg))")
         lines.append("Temps/image  moy \(ms(avg)) ms · médiane \(ms(percentile(0.5))) ms · p95 \(ms(percentile(0.95))) ms · p99 \(ms(percentile(0.99))) ms · pire \(ms(sorted[sorted.count - 1])) ms")
         lines.append("Images > 20 ms (sous 50 FPS): \(pct(over20)) %")
@@ -245,8 +262,8 @@ final class PerfRecorder {
         }
         let simPerFrame = simTotal / count
         lines.append("")
-        lines.append("TOTAL simulation mesurée: \(ms(simPerFrame)) ms/img (\(pct(simPerFrame / avg * 100)) % du temps image)")
-        lines.append("Reste (rendu RealityKit, SwiftUI, attente GPU): \(ms(max(0, avg - simPerFrame))) ms/img (\(pct(max(0, avg - simPerFrame) / avg * 100)) %)")
+        lines.append("TOTAL CPU mesuré (jeu + interface): \(ms(simPerFrame)) ms/img (\(pct(simPerFrame / avg * 100)) % du temps image)")
+        lines.append("Reste (rendu RealityKit + attente GPU): \(ms(max(0, avg - simPerFrame))) ms/img (\(pct(max(0, avg - simPerFrame) / avg * 100)) %)")
         lines.append("→ Si ce 'reste' domine, le goulot est le rendu/GPU, pas la logique de jeu.")
         lines.append("")
         lines.append("-- CHARGE DE SCÈNE (pics) --")

@@ -143,23 +143,7 @@ extension GameController {
         )
         grid = paintGrid
         root.addChild(paintGrid.root)
-        // Raised walkable tops each need their own paint quad: the canvas is a
-        // top-down image displayed at floor height, so without these the ink
-        // laid on a crate or platform is drawn on the ground UNDER it and the
-        // structure hides it — paint showing on parts of the arena only.
-        paintGrid.addSurfaceDecks(
-            walkableObstacles
-                .filter { $0.topY > 0.05 }
-                .map {
-                    PaintCanvasSurface.Deck(
-                        centerX: $0.center.x,
-                        centerZ: $0.center.z,
-                        halfX: $0.halfX,
-                        halfZ: $0.halfZ,
-                        topY: $0.topY
-                    )
-                }
-        )
+        registerPaintSurfaces(on: paintGrid)
 
         let cam = PerspectiveCamera()
         cam.camera.fieldOfViewInDegrees = GameConfig.cameraFieldOfView
@@ -209,6 +193,78 @@ extension GameController {
                 self?.update(deltaTime: Float(event.deltaTime))
             }
         }
+    }
+
+    /// Hands the paint system an exact registry of the arena's ground.
+    ///
+    /// Everything is derived from the SAME rectangles the collision system
+    /// already uses, so what can be painted matches what can be walked on:
+    /// - decks: every walkable top above floor level, sorted low → high so the
+    ///   highest wins wherever two overlap (a crate on a platform);
+    /// - blockers: water pools, plus the footprint of every solid non-walkable
+    ///   structure — ink now stops flush against a wall instead of sliding
+    ///   underneath it where nobody can ever see it;
+    /// - rampBlockers: ramp decks, which have never been paintable.
+    ///
+    /// Skipped in training: its targets slide every frame, so a baked registry
+    /// would be stale — the flat sandbox floor stays fully paintable.
+    private func registerPaintSurfaces(on paintGrid: PaintGrid) {
+        guard !isTraining else { return }
+
+        let decks = walkableObstacles
+            .filter { $0.topY > 0.05 }
+            .sorted { $0.topY < $1.topY }
+            .map {
+                PaintCanvasSurface.Deck(
+                    centerX: $0.center.x,
+                    centerZ: $0.center.z,
+                    halfX: $0.halfX,
+                    halfZ: $0.halfZ,
+                    topY: $0.topY
+                )
+            }
+
+        var blockers = waterZones.map {
+            PaintSurfaceMap.Box(
+                centerX: $0.center.x,
+                centerZ: $0.center.y,
+                halfX: $0.halfX,
+                halfZ: $0.halfZ
+            )
+        }
+        // Solid structures standing ON the floor (walls, cabins, containers).
+        // A knee-high step stays paintable — only what is tall enough to
+        // actually hide the ground is carved out.
+        for obstacle in obstacles where !obstacle.isWalkable
+            && obstacle.baseY < 0.4
+            && obstacle.topY > 0.8
+            && obstacle.passThroughTeam == nil {
+            blockers.append(
+                PaintSurfaceMap.Box(
+                    centerX: obstacle.center.x,
+                    centerZ: obstacle.center.z,
+                    halfX: obstacle.halfX,
+                    halfZ: obstacle.halfZ
+                )
+            )
+        }
+
+        let rampBlockers = ramps.map {
+            PaintSurfaceMap.OrientedBox(
+                centerX: $0.center.x,
+                centerZ: $0.center.y,
+                axisX: $0.axis.x,
+                axisZ: $0.axis.y,
+                halfLength: $0.halfLength,
+                halfWidth: $0.halfWidth
+            )
+        }
+
+        paintGrid.configureSurfaces(
+            decks: decks,
+            blockers: blockers,
+            rampBlockers: rampBlockers
+        )
     }
 
     /// Called when the intro countdown ends — the match actually starts.

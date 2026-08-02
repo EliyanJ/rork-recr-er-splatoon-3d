@@ -75,6 +75,10 @@ final class PaintCanvas {
     private var dirtyMaxX = Int.min
     private var dirtyMaxY = Int.min
 
+    /// Per-pixel registry of which walkable surface owns each texel. Installed
+    /// once at match setup; until then every pixel counts as open floor.
+    private(set) var surfaceMap: PaintSurfaceMap?
+
     /// Diagnostics only — how much work the canvas has actually done.
     private(set) var stampCount = 0
     private(set) var writtenPixelCount = 0
@@ -111,6 +115,16 @@ final class PaintCanvas {
         if GameConfig.paintPerfDebug {
             NSLog("[PaintCanvas] \(width)×\(height) px for \(arenaWidth)×\(arenaDepth) m — \(pixels.count / 1024) KB")
         }
+    }
+
+    /// Installs the surface registry. Called once, before the first stamp.
+    func setSurfaceMap(_ map: PaintSurfaceMap) {
+        surfaceMap = map
+    }
+
+    /// Which surface owns the texel under a world point.
+    func surfaceID(atWorldX x: Float, z: Float) -> UInt16 {
+        surfaceMap?.id(atWorldX: x, z: z) ?? PaintSurfaceMap.ground
     }
 
     /// Power-of-two texture side covering `meters` at the target density,
@@ -190,8 +204,12 @@ final class PaintCanvas {
     ///     so neighbouring hits merge into one continuous coat, matching how
     ///     the mesh splats overhang their tile.
     ///   - color: straight RGBA bytes of the owning team.
-    ///   - isBlocked: world-space test for unpaintable ground (water, ramp
-    ///     footprints). Called only for pixels the blot would actually fill.
+    ///   - surfaceID: the surface the impact belongs to (see
+    ///     `surfaceID(atWorldX:z:)`). ONLY texels registered to that same
+    ///     surface are written, so ink laid on the floor stops flush at a
+    ///     crate's edge and ink laid on a crate top never leaks onto the floor
+    ///     around it. An exact identity test — no height tolerance, therefore
+    ///     no dead zones on flat ground.
     ///
     /// Cost is proportional to the blot's area in pixels — a few thousand byte
     /// writes — and does NOT grow with match progress.
@@ -200,7 +218,7 @@ final class PaintCanvas {
         z: Float,
         radius: Float,
         color: SIMD4<UInt8>,
-        isBlocked: (Float, Float) -> Bool
+        surfaceID: UInt16
     ) {
         // Overhang matches the mesh splats' radius (tileSize * 0.82) so the
         // texture covers the same visual footprint as the geometry it mirrors.
@@ -238,7 +256,6 @@ final class PaintCanvas {
             let v = (Float(py) + 0.5 - centerY) / radiusY
             guard v > -1, v < 1 else { continue }
             let rowBase = py * width * 4
-            let worldZ = (Float(py) + 0.5) / Float(height) * arenaDepth - arenaDepth / 2
             for px in minPX...maxPX {
                 let u = (Float(px) + 0.5 - centerX) / radiusX
                 guard u * u + v * v <= 1 else { continue }
@@ -257,8 +274,10 @@ final class PaintCanvas {
                 let opacity = stamp[my * stampSize + mx]
                 guard opacity > 0 else { continue }
 
-                let worldX = (Float(px) + 0.5) / Float(width) * arenaWidth - arenaWidth / 2
-                guard !isBlocked(worldX, worldZ) else { continue }
+                // One array read replaces the old per-pixel world-space blocked
+                // test (two divisions plus a closure call): the registry
+                // already knows the answer, exactly.
+                if let surfaceMap, surfaceMap.id(pixelX: px, pixelY: py) != surfaceID { continue }
 
                 let index = rowBase + px * 4
                 if opacity >= threshold {

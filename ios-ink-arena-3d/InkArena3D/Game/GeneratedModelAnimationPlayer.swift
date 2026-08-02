@@ -127,6 +127,13 @@ final class GeneratedModelAnimationPlayer {
     }
 
     private func play(_ resourceName: String?, looping: Bool) {
+        PerfRecorder.shared.measure(.animation) { playClip(resourceName, looping: looping) }
+    }
+
+    /// Clip switching is a prime suspect for one-off frame hitches (binding a
+    /// clip to a rig, and the clone path below), so it is timed separately
+    /// from the character update that triggers it.
+    private func playClip(_ resourceName: String?, looping: Bool) {
         resolveBaseIfNeeded()
         // Stop whatever was playing and clear the compensation offset.
         baseVisual?.stopAllAnimations()

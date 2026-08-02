@@ -302,13 +302,44 @@ final class PaintGrid {
         }
     }
 
-    /// Gives the raised walkable tops their own paint quads.
+    /// Registers the arena's real paintable ground, once, at match setup.
     ///
-    /// Only meaningful on the texture path: the ground quad alone cannot show
-    /// ink standing on a crate or platform. No-op on the geometry path, where
-    /// every splat already carries its own surface height.
-    func addSurfaceDecks(_ decks: [PaintCanvasSurface.Deck]) {
+    /// Two things are built from the SAME sorted deck list, which is what keeps
+    /// them consistent:
+    /// - the per-pixel `PaintSurfaceMap`, so every stamp knows exactly which
+    ///   surface each texel belongs to (no ink bleeding between a crate top and
+    ///   the floor, and no height-tolerance dead zones);
+    /// - one quad per raised top, so ink standing on a crate is DRAWN on the
+    ///   crate instead of on the ground hidden underneath it.
+    ///
+    /// Deck N owns registry id `firstDeck + N`; the list must be sorted by
+    /// ascending height so the highest surface wins wherever two overlap.
+    func configureSurfaces(
+        decks: [PaintCanvasSurface.Deck],
+        blockers: [PaintSurfaceMap.Box],
+        rampBlockers: [PaintSurfaceMap.OrientedBox]
+    ) {
+        let map = PaintSurfaceMap(
+            width: canvas.width,
+            height: canvas.height,
+            arenaWidth: GameConfig.arenaWidth,
+            arenaDepth: GameConfig.arenaDepth,
+            blockers: blockers,
+            rampBlockers: rampBlockers,
+            decks: decks.map {
+                PaintSurfaceMap.Box(
+                    centerX: $0.centerX,
+                    centerZ: $0.centerZ,
+                    halfX: $0.halfX,
+                    halfZ: $0.halfZ
+                )
+            }
+        )
+        canvas.setSurfaceMap(map)
         canvasSurface?.addDecks(decks)
+        if GameConfig.paintPerfDebug {
+            NSLog("[PaintGrid] registre surfaces — sol \(map.groundPixels) px · surélevé \(map.deckPixels) px · bloqué \(map.blockedPixels) px")
+        }
     }
 
     /// True while the textured quad is what the player actually sees.
@@ -337,16 +368,6 @@ final class PaintGrid {
             return UInt8(max(0, min(255, (linear * 255).rounded())))
         }
         return SIMD4<UInt8>(byte(r), byte(g), byte(b), 255)
-    }
-
-    /// Whether the tile covering a world point can never take paint.
-    /// Out-of-arena reads count as blocked so the canvas never bleeds past
-    /// the playable footprint.
-    private func isBlockedWorld(x: Float, z: Float) -> Bool {
-        let col = Int((x + GameConfig.arenaWidth / 2) / GameConfig.tileSize)
-        let row = Int((z + GameConfig.arenaDepth / 2) / GameConfig.tileSize)
-        guard col >= 0, col < cols, row >= 0, row < rows else { return true }
-        return blockedTiles[row * cols + col]
     }
 
     /// Builds a star/splash-shaped FLAT decal: a closed ring of points whose
@@ -434,14 +455,19 @@ final class PaintGrid {
         // metres) and its tile-centre sampling cut hard straight lines into
         // flat ground — the dead zones. Water/ramp/out-of-arena stay excluded,
         // nothing else.
+        // The impact's OWN surface decides what the blot may cover. An impact
+        // on unpaintable ground (a wall footprint, the lip of a pool) still
+        // inks the floor around it, which is what a player expects when
+        // shooting the base of a wall.
+        var surfaceID = canvas.surfaceID(atWorldX: x, z: z)
+        if surfaceID == PaintSurfaceMap.blocked { surfaceID = PaintSurfaceMap.ground }
         canvas.stamp(
             atX: x,
             z: z,
             radius: radius,
-            color: team == .orange ? orangeInk : purpleInk
-        ) { worldX, worldZ in
-            isBlockedWorld(x: worldX, z: worldZ)
-        }
+            color: team == .orange ? orangeInk : purpleInk,
+            surfaceID: surfaceID
+        )
 
         var gained = 0
         for row in minRow...maxRow {
