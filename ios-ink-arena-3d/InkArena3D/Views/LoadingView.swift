@@ -19,8 +19,12 @@ struct MatchIntroOverlay: View {
     @State private var countdown = 5
     @State private var pulse = false
     @State private var stripeOffset: CGFloat = 0
+    /// When the overlay appeared, used to hold the lore screen up for a
+    /// readable minimum even when the arena finishes building instantly.
+    @State private var startDate = Date()
+
     /// Minimum time the lore screen stays up, even on fast loads.
-    @State private var minimumDelayDone = false
+    private static let minimumLoreDuration: TimeInterval = 2.0
 
     var body: some View {
         ZStack {
@@ -50,12 +54,18 @@ struct MatchIntroOverlay: View {
                 stripeOffset = 40
             }
         }
-        .task {
-            try? await Task.sleep(for: .seconds(2.0))
-            minimumDelayDone = true
-            startCountdownIfReady()
-        }
-        .onChange(of: isSceneReady) { _, _ in
+        // Keyed on `isSceneReady` on purpose. A plain `.task` captures the
+        // view value from the render pass that started it, so it would read a
+        // stale `isSceneReady == false` forever and never start the countdown;
+        // and a lone `.onChange` never fires when the arena is already ready on
+        // first render. Either case left "Préparation de l'arène" spinning for
+        // good. Re-keying restarts the wait with the current value.
+        .task(id: isSceneReady) {
+            let remaining = Self.minimumLoreDuration - Date().timeIntervalSince(startDate)
+            if remaining > 0 {
+                try? await Task.sleep(for: .seconds(remaining))
+            }
+            guard !Task.isCancelled else { return }
             startCountdownIfReady()
         }
     }
@@ -63,7 +73,7 @@ struct MatchIntroOverlay: View {
     /// The countdown only starts once the arena is REALLY loaded and the
     /// lore has been readable for a couple of seconds.
     private func startCountdownIfReady() {
-        guard phase == .connecting, isSceneReady, minimumDelayDone else { return }
+        guard phase == .connecting, isSceneReady else { return }
         phase = .countdown
         Task {
             for value in stride(from: 5, through: 1, by: -1) {

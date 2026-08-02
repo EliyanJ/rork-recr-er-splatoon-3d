@@ -8,7 +8,33 @@ import simd
 /// per-frame loop, and starts the match. Verbatim from `GameController`.
 extension GameController {
     func setup(content: RealityViewCameraContent) async {
+        // Deduplicate: a second make-closure invocation awaits the first build
+        // rather than returning early. The old `guard worldRoot == nil` bailed
+        // out WITHOUT ever setting `isSceneReady`, which left "Préparation de
+        // l'arène" spinning forever whenever the first build was still running
+        // or had been abandoned.
+        if let existing = setupTask {
+            await existing.value
+            return
+        }
+        // Deliberately unstructured: SwiftUI cancels the make closure's task
+        // when it re-evaluates the view, and a cancelled build would leave the
+        // arena half-assembled with the overlay never released. This task runs
+        // to completion on its own.
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.performSetup(content: content)
+        }
+        setupTask = task
+        await task.value
+    }
+
+    private func performSetup(content: RealityViewCameraContent) async {
         guard worldRoot == nil else { return }
+        // Whatever happens below — a missing model, a failed texture decode, a
+        // cancelled load — the overlay MUST be released, otherwise the match is
+        // simply unreachable. A degraded arena beats an infinite loading screen.
+        defer { isSceneReady = true }
         isLocalDuel = localMatch.phase == .inMatch
         if isLocalDuel {
             // Team by network role: host = orange / left base, guest =
@@ -166,7 +192,6 @@ extension GameController {
                 self?.update(deltaTime: Float(event.deltaTime))
             }
         }
-        isSceneReady = true
     }
 
     /// Called when the intro countdown ends — the match actually starts.

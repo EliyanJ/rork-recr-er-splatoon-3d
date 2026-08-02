@@ -195,6 +195,11 @@ final class GameController {
     // MARK: - Scene
 
     var worldRoot: Entity?
+    /// The in-flight (or finished) arena build. SwiftUI can run `RealityView`'s
+    /// make closure more than once and can cancel it midway; holding the build
+    /// in one unstructured task means a later caller awaits that same build
+    /// instead of returning early and stranding the loading overlay forever.
+    @ObservationIgnored var setupTask: Task<Void, Never>?
     var camera: PerspectiveCamera?
     var grid: PaintGrid?
     /// Texture-backed material set for the arena (loaded once at setup).
