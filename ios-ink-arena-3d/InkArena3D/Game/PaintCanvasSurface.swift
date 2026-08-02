@@ -31,10 +31,26 @@ import simd
 /// rows only) that is then blitted across.
 @MainActor
 final class PaintCanvasSurface {
-    /// The quad to parent into the scene.
+    /// A raised walkable top (crate, platform, container deck) that needs its
+    /// own quad. The ground quad lies at floor level, so without these the ink
+    /// painted on top of a structure is drawn UNDER it and never seen.
+    nonisolated struct Deck: Sendable {
+        let centerX: Float
+        let centerZ: Float
+        let halfX: Float
+        let halfZ: Float
+        let topY: Float
+    }
+
+    /// The ground quad, and parent of every raised deck quad.
     let entity: ModelEntity
 
     private let canvas: PaintCanvas
+    /// Shared by the ground quad and every deck: one texture, one material,
+    /// so a raised deck costs a draw call and nothing else.
+    private let inkMaterial: UnlitMaterial
+    private let arenaWidth: Float
+    private let arenaDepth: Float
     private let commandQueue: MTLCommandQueue
     private let staging: MTLTexture
     private let lowLevelTexture: LowLevelTexture
@@ -132,6 +148,10 @@ final class PaintCanvasSurface {
         material.opacityThreshold = 0.35
         material.faceCulling = .back
 
+        self.inkMaterial = material
+        self.arenaWidth = arenaWidth
+        self.arenaDepth = arenaDepth
+
         entity = ModelEntity(
             mesh: PaintCanvasSurface.floorMesh(width: arenaWidth, depth: arenaDepth),
             materials: [material]
@@ -141,6 +161,64 @@ final class PaintCanvasSurface {
         if GameConfig.paintPerfDebug {
             NSLog("[PaintCanvasSurface] ready — \(canvas.width)×\(canvas.height) quad \(arenaWidth)×\(arenaDepth) m")
         }
+    }
+
+    /// Adds one quad per raised walkable top.
+    ///
+    /// The arena is not flat: crates, platforms and container decks are stood
+    /// on and painted, but a single ground-level quad can only ever show ink
+    /// at floor height — every splat landed on a structure was being drawn on
+    /// the ground underneath it, hidden by the structure itself. That is why
+    /// paint appeared on some parts of the arena and not others.
+    ///
+    /// Each deck samples the SAME canvas texture with UVs taken from its world
+    /// footprint, so a texel painted at (x, z) shows at the height the player
+    /// actually stands on, with no extra memory and no second canvas.
+    func addDecks(_ decks: [Deck]) {
+        for deck in decks {
+            let mesh = PaintCanvasSurface.deckMesh(
+                deck: deck,
+                arenaWidth: arenaWidth,
+                arenaDepth: arenaDepth
+            )
+            let quad = ModelEntity(mesh: mesh, materials: [inkMaterial])
+            // Local Y only: the parent already sits at `floorOffsetY`, so the
+            // deck lands the same hair above its own top surface.
+            quad.position = SIMD3<Float>(deck.centerX, deck.topY, deck.centerZ)
+            quad.name = "paintCanvasDeck"
+            entity.addChild(quad)
+        }
+        if GameConfig.paintPerfDebug {
+            NSLog("[PaintCanvasSurface] \(decks.count) raised paint decks")
+        }
+    }
+
+    /// Quad covering one raised top, UV-mapped to its slice of the canvas so
+    /// it lines up exactly with the ground quad's mapping.
+    private static func deckMesh(deck: Deck, arenaWidth: Float, arenaDepth: Float) -> MeshResource {
+        let u0 = (deck.centerX - deck.halfX + arenaWidth / 2) / arenaWidth
+        let u1 = (deck.centerX + deck.halfX + arenaWidth / 2) / arenaWidth
+        let v0 = (deck.centerZ - deck.halfZ + arenaDepth / 2) / arenaDepth
+        let v1 = (deck.centerZ + deck.halfZ + arenaDepth / 2) / arenaDepth
+
+        var descriptor = MeshDescriptor(name: "paintCanvasDeck")
+        descriptor.positions = MeshBuffers.Positions([
+            SIMD3<Float>(-deck.halfX, 0, -deck.halfZ),
+            SIMD3<Float>(deck.halfX, 0, -deck.halfZ),
+            SIMD3<Float>(deck.halfX, 0, deck.halfZ),
+            SIMD3<Float>(-deck.halfX, 0, deck.halfZ)
+        ])
+        descriptor.normals = MeshBuffers.Normals([
+            SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, 1, 0),
+            SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, 1, 0)
+        ])
+        descriptor.textureCoordinates = MeshBuffers.TextureCoordinates([
+            SIMD2<Float>(u0, v0), SIMD2<Float>(u1, v0),
+            SIMD2<Float>(u1, v1), SIMD2<Float>(u0, v1)
+        ])
+        descriptor.primitives = .triangles([0, 2, 1, 0, 3, 2])
+        return (try? MeshResource.generate(from: [descriptor]))
+            ?? MeshResource.generatePlane(width: deck.halfX * 2, depth: deck.halfZ * 2)
     }
 
     /// One arena-sized quad in the XZ plane, wound counter-clockwise as seen

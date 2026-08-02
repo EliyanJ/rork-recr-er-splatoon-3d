@@ -175,6 +175,14 @@ final class PaintGrid {
     private let orangeInk: SIMD4<UInt8>
     private let purpleInk: SIMD4<UInt8>
     private let heightAt: (Float, Float) -> Float
+    /// Height of the walkable surface over every tile, sampled once at setup.
+    /// The arena's structures are static, so this never changes — it turns the
+    /// per-pixel "which level am I painting?" test into an array lookup.
+    private var tileSurfaceY: [Float]
+    /// How far a pixel's surface may differ from the impact's before it is
+    /// treated as another level. Below any real step (crates start at 0.9 m),
+    /// above the tolerance of a flat top.
+    private static let levelTolerance: Float = 0.45
     /// Declared surface (fixed plane + bounds) plating the tile at (x, z), or
     /// nil for open floor. Drives the splat's fixed orientation and edge clip.
     private let surfaceAt: (Float, Float) -> SurfaceClip?
@@ -251,6 +259,14 @@ final class PaintGrid {
         owners = Array(repeating: nil, count: cols * rows)
         instances = Array(repeating: nil, count: cols * rows)
         blockedTiles = Array(repeating: false, count: cols * rows)
+        // Local copies: reading `cols`/`rows` inside the closure would capture
+        // `self` before initialization finishes.
+        let tileCols = cols
+        tileSurfaceY = (0..<(tileCols * rows)).map { index in
+            let cx = (Float(index % tileCols) + 0.5) * GameConfig.tileSize - GameConfig.arenaWidth / 2
+            let cz = (Float(index / tileCols) + 0.5) * GameConfig.tileSize - GameConfig.arenaDepth / 2
+            return heightAt(cx, cz)
+        }
         canvas = PaintCanvas(
             arenaWidth: GameConfig.arenaWidth,
             arenaDepth: GameConfig.arenaDepth
@@ -300,6 +316,23 @@ final class PaintGrid {
                 NSLog("[PaintGrid] texture paint unavailable — falling back to merged splat meshes")
             }
         }
+    }
+
+    /// Gives the raised walkable tops their own paint quads.
+    ///
+    /// Only meaningful on the texture path: the ground quad alone cannot show
+    /// ink standing on a crate or platform. No-op on the geometry path, where
+    /// every splat already carries its own surface height.
+    func addSurfaceDecks(_ decks: [PaintCanvasSurface.Deck]) {
+        canvasSurface?.addDecks(decks)
+    }
+
+    /// Walkable-surface height over a world point — O(1) table lookup.
+    private func surfaceY(atX x: Float, z: Float) -> Float {
+        let col = Int((x + GameConfig.arenaWidth / 2) / GameConfig.tileSize)
+        let row = Int((z + GameConfig.arenaDepth / 2) / GameConfig.tileSize)
+        guard col >= 0, col < cols, row >= 0, row < rows else { return 0 }
+        return tileSurfaceY[row * cols + col]
     }
 
     /// True while the textured quad is what the player actually sees.
@@ -417,13 +450,20 @@ final class PaintGrid {
         // Visual-only, runs in parallel with the mesh path for now. Written on
         // every call (not only when tiles are gained) so re-inking already-held
         // ground still refreshes the image, exactly like the splats do.
+        // A texel is a column of the arena, but a column can hold several
+        // walkable levels (floor, crate top, platform). Ink is confined to the
+        // level it was actually laid on, otherwise a shot bursting on the floor
+        // beside a crate would climb onto the crate's deck quad, which samples
+        // the very same texels.
+        let impactY = surfaceY(atX: x, z: z)
         canvas.stamp(
             atX: x,
             z: z,
             radius: radius,
             color: team == .orange ? orangeInk : purpleInk
         ) { worldX, worldZ in
-            isBlockedWorld(x: worldX, z: worldZ)
+            if isBlockedWorld(x: worldX, z: worldZ) { return true }
+            return abs(surfaceY(atX: worldX, z: worldZ) - impactY) > PaintGrid.levelTolerance
         }
 
         var gained = 0

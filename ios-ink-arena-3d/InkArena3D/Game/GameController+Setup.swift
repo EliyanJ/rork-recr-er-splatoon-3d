@@ -143,6 +143,23 @@ extension GameController {
         )
         grid = paintGrid
         root.addChild(paintGrid.root)
+        // Raised walkable tops each need their own paint quad: the canvas is a
+        // top-down image displayed at floor height, so without these the ink
+        // laid on a crate or platform is drawn on the ground UNDER it and the
+        // structure hides it — paint showing on parts of the arena only.
+        paintGrid.addSurfaceDecks(
+            walkableObstacles
+                .filter { $0.topY > 0.05 }
+                .map {
+                    PaintCanvasSurface.Deck(
+                        centerX: $0.center.x,
+                        centerZ: $0.center.z,
+                        halfX: $0.halfX,
+                        halfZ: $0.halfZ,
+                        topY: $0.topY
+                    )
+                }
+        )
 
         let cam = PerspectiveCamera()
         cam.camera.fieldOfViewInDegrees = GameConfig.cameraFieldOfView
