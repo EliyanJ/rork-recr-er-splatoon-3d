@@ -102,10 +102,17 @@ extension GameController {
             buildTrainingArena(root)
         } else {
             addSkyDome(root)
-            buildArena(root)
+            // Everything under `staticRoot` never moves for the whole match,
+            // which is exactly what makes it mergeable below. Spawn rings and
+            // capture zones stay outside: they pulse, recolour and resize.
+            let staticRoot = Entity()
+            staticRoot.name = "static_arena"
+            root.addChild(staticRoot)
+            buildArena(staticRoot)
+            buildCityBackdrop(staticRoot)
+            mergeStaticArena(staticRoot)
             buildSpawnZones(root)
             buildCaptureZones(root)
-            buildCityBackdrop(root)
         }
         walkableObstacles = obstacles.filter(\.isWalkable)
         // Build the collision broadphase from the now-complete static geometry
@@ -193,6 +200,34 @@ extension GameController {
                 self?.update(deltaTime: Float(event.deltaTime))
             }
         }
+    }
+
+    /// Collapses the finished arena into a handful of merged meshes.
+    ///
+    /// The arena is ~250 entities that never move, each costing a draw call
+    /// every frame for the entire match — and the traces say the frame is
+    /// dominated by exactly that kind of render-submission work (83 % of the
+    /// frame is spent outside our own measured code). Merging by material
+    /// leaves the picture identical while collapsing those hundreds of
+    /// submissions into a handful.
+    ///
+    /// The decorative layer is merged FIRST and on its own, so its batches
+    /// stay parented to it and the "hide all decor" quality switch keeps
+    /// working as a single assignment.
+    private func mergeStaticArena(_ staticRoot: Entity) {
+        guard qualitySettings.mergeStaticGeometry else { return }
+        var stats = StaticBatcher.Stats()
+        var protected: Set<ObjectIdentifier> = []
+        if let decorRoot, decorRoot.parent === staticRoot {
+            stats = stats + StaticBatcher.run(roots: [decorRoot])
+            protected.insert(ObjectIdentifier(decorRoot))
+        }
+        stats = stats + StaticBatcher.run(roots: [staticRoot], protecting: protected)
+        PerfRecorder.shared.noteBatching(
+            absorbed: stats.absorbed,
+            produced: stats.produced,
+            keptAsIs: stats.keptAsIs
+        )
     }
 
     /// Hands the paint system an exact registry of the arena's ground.

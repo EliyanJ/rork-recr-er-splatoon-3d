@@ -106,6 +106,12 @@ final class PerfRecorder {
     private var paintUploads = 0
     private var paintStamps = 0
 
+    /// Static-geometry batching result. Recorded at scene setup, i.e. before
+    /// a trace is armed, so it lives outside the `isRecording` guard.
+    private var batchAbsorbed = 0
+    private var batchProduced = 0
+    private var batchKept = 0
+
     private let defaults = UserDefaults.standard
     private let reportKey = "perf.lastReport"
 
@@ -192,6 +198,15 @@ final class PerfRecorder {
         memorySamples.append(PerfSampler.memoryFootprintMB())
     }
 
+    /// Records what the static batcher did to the arena at setup. Always
+    /// stored (a trace is usually armed after the scene is built) and read
+    /// back into whichever report comes next.
+    func noteBatching(absorbed: Int, produced: Int, keptAsIs: Int) {
+        batchAbsorbed = absorbed
+        batchProduced = produced
+        batchKept = keptAsIs
+    }
+
     /// Tracks the peak scene load so the report can correlate cost with what
     /// was actually on screen.
     func noteCounts(projectiles: Int, bots: Int, vfx: Int, paintTiles: Int, uploads: Int, stamps: Int) {
@@ -268,6 +283,10 @@ final class PerfRecorder {
         lines.append("")
         lines.append("-- CHARGE DE SCÈNE (pics) --")
         lines.append("Projectiles max: \(maxProjectiles) · bots max: \(maxBots) · VFX simultanés max: \(maxVFX)")
+        if batchAbsorbed > 0 || batchKept > 0 {
+            let saved = max(0, batchAbsorbed - batchProduced)
+            lines.append("Arène fusionnée: \(batchAbsorbed) objets → \(batchProduced) meshes (\(saved) draw calls en moins/img) · \(batchKept) non fusionnables")
+        }
         lines.append("Peinture: \(paintStamps) taches · \(paintUploads) uploads texture · \(maxPaintTiles) dalles peintes")
         lines.append("=== FIN ===")
         return lines.joined(separator: "\n")

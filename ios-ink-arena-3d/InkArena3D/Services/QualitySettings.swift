@@ -97,6 +97,15 @@ struct QualitySettings {
     /// arena, which is the single biggest GPU saving available on the lightest
     /// tiers. The art direction is already flat/cartoon, so the loss is minor.
     let unlitArena: Bool
+    /// Collapses the static arena into one merged mesh per material at setup.
+    ///
+    /// The arena is ~250 entities that never move, and each one costs a draw
+    /// call every frame for the whole match. Merging them changes nothing on
+    /// screen and removes the vast majority of that submission work — which
+    /// the traces point at as the dominant cost. On by default everywhere; the
+    /// flag exists so the whole pass can be switched off in one place if a
+    /// device ever misbehaves.
+    let mergeStaticGeometry: Bool
     /// Distance (metres, camera → character) past which a fighter's skeletal
     /// animation is paused. Skinning is the most expensive per-frame cost per
     /// character. Gameplay is untouched — the character keeps moving, shooting
@@ -148,6 +157,7 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: false,
+                mergeStaticGeometry: true,
                 animationCullDistance: .greatestFiniteMagnitude,
                 nameTagCullDistance: .greatestFiniteMagnitude,
                 blobShadowCullDistance: .greatestFiniteMagnitude,
@@ -168,6 +178,7 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: false,
+                mergeStaticGeometry: true,
                 animationCullDistance: 78,
                 nameTagCullDistance: 48,
                 blobShadowCullDistance: 55,
@@ -188,6 +199,7 @@ struct QualitySettings {
                 nameTagsEnabled: true,
                 simplifiedSkybox: false,
                 unlitArena: true,
+                mergeStaticGeometry: true,
                 animationCullDistance: 52,
                 nameTagCullDistance: 30,
                 blobShadowCullDistance: 32,
@@ -208,6 +220,7 @@ struct QualitySettings {
                 nameTagsEnabled: false,
                 simplifiedSkybox: true,
                 unlitArena: true,
+                mergeStaticGeometry: true,
                 animationCullDistance: 38,
                 nameTagCullDistance: 0,
                 blobShadowCullDistance: 20,
