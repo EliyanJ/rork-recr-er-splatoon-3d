@@ -62,6 +62,23 @@ final class PaintCanvas {
     /// RGBA8, row-major, top row first. Alpha 0 = bare ground.
     private(set) var pixels: [UInt8]
 
+    /// GAMEPLAY ownership, one byte per texel, in lockstep with `pixels`:
+    /// 0 = unpainted, 1 = orange, 2 = purple.
+    ///
+    /// This is what makes the sponge boost, the coverage score and the bot
+    /// decisions agree with what the player actually sees. Before, ownership
+    /// lived on a separate 1 m tile grid sampled at tile CENTRES while the
+    /// visuals came from this canvas — so a blot could ink the screen without
+    /// claiming a tile (no boost on visibly painted ground) and a tile could
+    /// be claimed a metre away from any visible ink (boost on bare ground).
+    /// One buffer, one truth.
+    private(set) var owners: [UInt8]
+
+    /// Painted texel counts per team — maintained incrementally in `stamp`,
+    /// never recounted, so coverage is exact and free.
+    private(set) var orangePixels = 0
+    private(set) var purplePixels = 0
+
     /// Arena footprint captured once — `GameConfig.arenaWidth/Depth` are
     /// computed from the selected map, and the mapping must not shift if
     /// anything mutates them mid-match.
@@ -78,6 +95,13 @@ final class PaintCanvas {
     /// Per-pixel registry of which walkable surface owns each texel. Installed
     /// once at match setup; until then every pixel counts as open floor.
     private(set) var surfaceMap: PaintSurfaceMap?
+
+    /// Texels that can ever hold ink — the coverage denominator. Falls back to
+    /// the whole buffer until the registry is installed.
+    var paintablePixels: Int {
+        guard let surfaceMap else { return width * height }
+        return max(1, surfaceMap.groundPixels + surfaceMap.deckPixels)
+    }
 
     /// Diagnostics only — how much work the canvas has actually done.
     private(set) var stampCount = 0
@@ -105,6 +129,7 @@ final class PaintCanvas {
         width = PaintCanvas.textureExtent(forMeters: arenaWidth)
         height = PaintCanvas.textureExtent(forMeters: arenaDepth)
         pixels = [UInt8](repeating: 0, count: width * height * 4)
+        owners = [UInt8](repeating: 0, count: width * height)
         stamps = (0..<PaintCanvas.stampVariants).map {
             PaintCanvas.makeStampMask(
                 seed: UInt64($0) &+ 17,
@@ -125,6 +150,16 @@ final class PaintCanvas {
     /// Which surface owns the texel under a world point.
     func surfaceID(atWorldX x: Float, z: Float) -> UInt16 {
         surfaceMap?.id(atWorldX: x, z: z) ?? PaintSurfaceMap.ground
+    }
+
+    /// Team owning the ink under a world point: 0 none, 1 orange, 2 purple.
+    /// A single array read — cheap enough to call every frame for every
+    /// fighter, which is what the movement code does.
+    func owner(atWorldX x: Float, z: Float) -> UInt8 {
+        let px = Int((x + arenaWidth / 2) / arenaWidth * Float(width))
+        let py = Int((z + arenaDepth / 2) / arenaDepth * Float(height))
+        guard px >= 0, px < width, py >= 0, py < height else { return 0 }
+        return owners[py * width + px]
     }
 
     /// Power-of-two texture side covering `meters` at the target density,
@@ -204,22 +239,30 @@ final class PaintCanvas {
     ///     so neighbouring hits merge into one continuous coat, matching how
     ///     the mesh splats overhang their tile.
     ///   - color: straight RGBA bytes of the owning team.
-    ///   - surfaceID: the surface the impact belongs to (see
-    ///     `surfaceID(atWorldX:z:)`). ONLY texels registered to that same
-    ///     surface are written, so ink laid on the floor stops flush at a
-    ///     crate's edge and ink laid on a crate top never leaks onto the floor
-    ///     around it. An exact identity test — no height tolerance, therefore
-    ///     no dead zones on flat ground.
+    ///   - team: 1 = orange, 2 = purple. Recorded per texel so gameplay reads
+    ///     the exact same ink the player sees.
+    ///
+    /// PAINTABILITY — every texel inside the blot is inked EXCEPT the ones the
+    /// registry marks unpaintable (water, ramps, outside the arena). Nothing
+    /// else is filtered: a blot landing beside a crate covers the floor and the
+    /// crate top alike, each drawn at its own height, exactly like the original
+    /// splat meshes did. The stricter "same surface as the impact" rule tried
+    /// earlier is what made ink stop for no visible reason next to every low
+    /// step and platform edge.
+    ///
+    /// Returns the number of texels newly taken from the other team (or from
+    /// bare ground) — the exact gameplay gain of this shot.
     ///
     /// Cost is proportional to the blot's area in pixels — a few thousand byte
     /// writes — and does NOT grow with match progress.
+    @discardableResult
     func stamp(
         atX x: Float,
         z: Float,
         radius: Float,
         color: SIMD4<UInt8>,
-        surfaceID: UInt16
-    ) {
+        team: UInt8
+    ) -> Int {
         // Overhang matches the mesh splats' radius (tileSize * 0.82) so the
         // texture covers the same visual footprint as the geometry it mirrors.
         let worldRadius = radius + GameConfig.tileSize * 0.75
@@ -227,13 +270,13 @@ final class PaintCanvas {
         let centerY = pixelY(forWorldZ: z)
         let radiusX = worldRadius / arenaWidth * Float(width)
         let radiusY = worldRadius / arenaDepth * Float(height)
-        guard radiusX > 0.5, radiusY > 0.5 else { return }
+        guard radiusX > 0.5, radiusY > 0.5 else { return 0 }
 
         let minPX = max(0, Int((centerX - radiusX).rounded(.down)))
         let maxPX = min(width - 1, Int((centerX + radiusX).rounded(.up)))
         let minPY = max(0, Int((centerY - radiusY).rounded(.down)))
         let maxPY = min(height - 1, Int((centerY + radiusY).rounded(.up)))
-        guard minPX <= maxPX, minPY <= maxPY else { return }
+        guard minPX <= maxPX, minPY <= maxPY else { return 0 }
 
         // Deterministic variant + quarter-turn from the world position, so the
         // same impact point always produces the same blot (replays, network
@@ -251,6 +294,7 @@ final class PaintCanvas {
         var touchedMaxX = Int.min
         var touchedMaxY = Int.min
         var written = 0
+        var claimed = 0
 
         for py in minPY...maxPY {
             let v = (Float(py) + 0.5 - centerY) / radiusY
@@ -277,7 +321,9 @@ final class PaintCanvas {
                 // One array read replaces the old per-pixel world-space blocked
                 // test (two divisions plus a closure call): the registry
                 // already knows the answer, exactly.
-                if let surfaceMap, surfaceMap.id(pixelX: px, pixelY: py) != surfaceID { continue }
+                let flatIndex = py * width + px
+                if let surfaceMap,
+                   surfaceMap.id(pixelX: px, pixelY: py) == PaintSurfaceMap.blocked { continue }
 
                 let index = rowBase + px * 4
                 if opacity >= threshold {
@@ -296,6 +342,15 @@ final class PaintCanvas {
                     continue
                 }
                 written += 1
+                // Ownership follows the visible ink, one for one.
+                let previous = owners[flatIndex]
+                if previous != team {
+                    if previous == 1 { orangePixels -= 1 }
+                    if previous == 2 { purplePixels -= 1 }
+                    owners[flatIndex] = team
+                    if team == 1 { orangePixels += 1 } else { purplePixels += 1 }
+                    claimed += 1
+                }
                 if px < touchedMinX { touchedMinX = px }
                 if px > touchedMaxX { touchedMaxX = px }
                 if py < touchedMinY { touchedMinY = py }
@@ -303,12 +358,13 @@ final class PaintCanvas {
             }
         }
 
-        guard written > 0 else { return }
+        guard written > 0 else { return claimed }
         lastStampX = Int(centerX)
         lastStampY = Int(centerY)
         stampCount += 1
         writtenPixelCount += written
         markDirty(minX: touchedMinX, minY: touchedMinY, maxX: touchedMaxX, maxY: touchedMaxY)
+        return claimed
     }
 
     private func markDirty(minX: Int, minY: Int, maxX: Int, maxY: Int) {
@@ -332,6 +388,9 @@ final class PaintCanvas {
     /// entity teardown — the between-matches reset is a memset.
     func reset() {
         for i in pixels.indices { pixels[i] = 0 }
+        for i in owners.indices { owners[i] = 0 }
+        orangePixels = 0
+        purplePixels = 0
         stampCount = 0
         writtenPixelCount = 0
         markDirty(minX: 0, minY: 0, maxX: width - 1, maxY: height - 1)

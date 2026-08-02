@@ -201,9 +201,11 @@ extension GameController {
     /// already uses, so what can be painted matches what can be walked on:
     /// - decks: every walkable top above floor level, sorted low → high so the
     ///   highest wins wherever two overlap (a crate on a platform);
-    /// - blockers: water pools, plus the footprint of every solid non-walkable
-    ///   structure — ink now stops flush against a wall instead of sliding
-    ///   underneath it where nobody can ever see it;
+    /// - blockers: water pools — and ONLY water. Walls were briefly carved out
+    ///   too, which read in play as ink refusing to stick for no reason around
+    ///   every structure (collision boxes are wider than the visible wall).
+    ///   Ink sliding under a wall is invisible anyway, so the old, predictable
+    ///   rule is back: everything is paintable except water and ramps;
     /// - rampBlockers: ramp decks, which have never been paintable.
     ///
     /// Skipped in training: its targets slide every frame, so a baked registry
@@ -224,7 +226,7 @@ extension GameController {
                 )
             }
 
-        var blockers = waterZones.map {
+        let blockers = waterZones.map {
             PaintSurfaceMap.Box(
                 centerX: $0.center.x,
                 centerZ: $0.center.y,
@@ -232,23 +234,6 @@ extension GameController {
                 halfZ: $0.halfZ
             )
         }
-        // Solid structures standing ON the floor (walls, cabins, containers).
-        // A knee-high step stays paintable — only what is tall enough to
-        // actually hide the ground is carved out.
-        for obstacle in obstacles where !obstacle.isWalkable
-            && obstacle.baseY < 0.4
-            && obstacle.topY > 0.8
-            && obstacle.passThroughTeam == nil {
-            blockers.append(
-                PaintSurfaceMap.Box(
-                    centerX: obstacle.center.x,
-                    centerZ: obstacle.center.z,
-                    halfX: obstacle.halfX,
-                    halfZ: obstacle.halfZ
-                )
-            )
-        }
-
         let rampBlockers = ramps.map {
             PaintSurfaceMap.OrientedBox(
                 centerX: $0.center.x,

@@ -199,17 +199,33 @@ final class PaintGrid {
     /// dirty so the next flush rebuilds it from the newer ownership state.
     private var rebuildingSlots: Set<Int> = []
 
-    private(set) var orangeCount = 0
-    private(set) var purpleCount = 0
+    private var tileOrangeCount = 0
+    private var tilePurpleCount = 0
+
+    /// Ink held by each team.
+    ///
+    /// With texture paint on, these come STRAIGHT from the canvas texels the
+    /// player sees. The 1 m tile counters below stay maintained for the
+    /// geometry fallback, but they are no longer what the score reads: a tile
+    /// was only claimed when its CENTRE fell inside the blot, so coverage
+    /// jumped in 1 m steps that had little to do with the ink on screen.
+    var orangeCount: Int {
+        usesTexturePaint ? canvas.orangePixels : tileOrangeCount
+    }
+    var purpleCount: Int {
+        usesTexturePaint ? canvas.purplePixels : tilePurpleCount
+    }
     /// Live count of merged chunk/team meshes currently in the scene — this is
     /// the real paint draw-call count with batching enabled.
     private(set) var activePaintEntities = 0
 
-    var totalCount: Int { owners.count - blockedCount }
+    var totalCount: Int {
+        usesTexturePaint ? canvas.paintablePixels : owners.count - blockedCount
+    }
     /// Number of painted tiles = the paint draw-call count the OLD, unbatched
     /// design would have produced (one entity per tile). Used by the debug
     /// overlay to show the before/after gain live.
-    var paintedTileCount: Int { orangeCount + purpleCount }
+    var paintedTileCount: Int { tileOrangeCount + tilePurpleCount }
 
     /// The shared pool of splash silhouettes for the given detail level.
     private static func makeSplashGeometries(simplified: Bool) -> [SplashGeometry] {
@@ -424,7 +440,22 @@ final class PaintGrid {
         return SplashGeometry(positions: positions, normals: normals, uvs: uvs, indices: indices)
     }
 
+    /// Which team's ink covers a world point.
+    ///
+    /// SOURCE OF TRUTH — with texture paint on this reads the very texel drawn
+    /// under the player's feet, so the sponge dive boost, the walk boost and
+    /// the bots all react to the ink that is actually visible. The old 1 m tile
+    /// lookup is why the boost felt random: a tile 1 m wide was claimed (or
+    /// not) from its centre alone, so you could stand on bright team ink with
+    /// no boost, or on bare ground with one.
     func team(atX x: Float, z: Float) -> Team? {
+        if usesTexturePaint {
+            switch canvas.owner(atWorldX: x, z: z) {
+            case 1: return .orange
+            case 2: return .purple
+            default: return nil
+            }
+        }
         let col = Int((x + GameConfig.arenaWidth / 2) / GameConfig.tileSize)
         let row = Int((z + GameConfig.arenaDepth / 2) / GameConfig.tileSize)
         guard col >= 0, col < cols, row >= 0, row < rows else { return nil }
@@ -455,21 +486,21 @@ final class PaintGrid {
         // metres) and its tile-centre sampling cut hard straight lines into
         // flat ground — the dead zones. Water/ramp/out-of-arena stay excluded,
         // nothing else.
-        // The impact's OWN surface decides what the blot may cover. An impact
-        // on unpaintable ground (a wall footprint, the lip of a pool) still
-        // inks the floor around it, which is what a player expects when
-        // shooting the base of a wall.
-        var surfaceID = canvas.surfaceID(atWorldX: x, z: z)
-        if surfaceID == PaintSurfaceMap.blocked { surfaceID = PaintSurfaceMap.ground }
-        canvas.stamp(
+        let claimedPixels = canvas.stamp(
             atX: x,
             z: z,
             radius: radius,
             color: team == .orange ? orangeInk : purpleInk,
-            surfaceID: surfaceID
+            team: team == .orange ? 1 : 2
         )
 
         var gained = 0
+        // Texture paint owns the score: report the gain in tile-equivalents so
+        // the per-fighter statistics keep the same scale as before, but derived
+        // from the texels actually taken.
+        if usesTexturePaint {
+            return Int((Float(claimedPixels) / pixelsPerTile).rounded())
+        }
         for row in minRow...maxRow {
             for col in minCol...maxCol {
                 let cx = (Float(col) + 0.5) * GameConfig.tileSize - halfW
@@ -489,6 +520,14 @@ final class PaintGrid {
     /// note above).
     private func material(for team: Team) -> UnlitMaterial {
         team == .orange ? orangeMaterial : purpleMaterial
+    }
+
+    /// Canvas texels covering one 1 m gameplay tile — converts a texel gain
+    /// back into the tile-count unit the stats and HUD were built around.
+    private var pixelsPerTile: Float {
+        let perMeterX = Float(canvas.width) / GameConfig.arenaWidth
+        let perMeterZ = Float(canvas.height) / GameConfig.arenaDepth
+        return max(1, perMeterX * GameConfig.tileSize * perMeterZ * GameConfig.tileSize)
     }
 
     private func teamSlot(_ team: Team) -> Int { team == .orange ? 0 : 1 }
@@ -527,10 +566,10 @@ final class PaintGrid {
         guard !blockedTiles[index] else { return 0 }
         let current = owners[index]
         guard current != team else { return 0 }
-        if current == .orange { orangeCount -= 1 }
-        if current == .purple { purpleCount -= 1 }
+        if current == .orange { tileOrangeCount -= 1 }
+        if current == .purple { tilePurpleCount -= 1 }
         owners[index] = team
-        if team == .orange { orangeCount += 1 } else { purpleCount += 1 }
+        if team == .orange { tileOrangeCount += 1 } else { tilePurpleCount += 1 }
 
         // Bake the tile's placement once — repainting a claimed tile keeps the
         // same instance and merely moves it between team buffers on rebuild,
