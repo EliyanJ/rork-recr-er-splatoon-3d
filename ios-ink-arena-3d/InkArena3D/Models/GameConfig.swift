@@ -8,15 +8,34 @@ struct PaintPerfStats: Equatable {
     let activeEntities: Int
     /// Painted tiles = the draw calls the OLD one-entity-per-tile design used.
     let legacyDrawCalls: Int
+    /// True while the textured quad (not the splat meshes) is on screen.
+    let usesTexture: Bool
+    /// Ink blots actually written into the canvas since the match started.
+    /// If this stops rising while you shoot, the problem is UPSTREAM of the
+    /// texture (the paint call never happens); if it rises but nothing shows,
+    /// the problem is the DISPLAY.
+    let canvasStamps: Int
+    /// Total pixels written — rises with every blot that landed on paintable
+    /// ground. Stays flat when every pixel of a blot was rejected as blocked.
+    let canvasPixels: Int
+    /// GPU uploads performed. Must climb continuously while painting.
+    let canvasUploads: Int
+    /// Pixel coordinates of the last blot, to check the world→texture mapping
+    /// against where the shot actually landed.
+    let lastStampX: Int
+    let lastStampY: Int
 }
 
 /// Central tuning values for the turf-war match.
 enum GameConfig {
     /// Debug flag: when true, the HUD shows a live paint-performance overlay
     /// (active paint draw calls vs the legacy per-tile count) and logs the
-    /// same numbers to the console at ~2 Hz. Flip to `true` to compare the
-    /// batched cost against the old design during a match.
-    static var paintPerfDebug = false
+    /// same numbers to the console at ~2 Hz.
+    ///
+    /// Player-switchable (Réglages → Affichage) so a paint problem can be
+    /// diagnosed on a real device, in a real match, without a new build.
+    @MainActor
+    static var paintPerfDebug: Bool { ProfileStore.shared.paintDebugOverlay }
 
     /// Paint is drawn as ONE textured quad over the floor (`PaintCanvas` +
     /// `PaintCanvasSurface`) instead of merged per-chunk splat meshes.

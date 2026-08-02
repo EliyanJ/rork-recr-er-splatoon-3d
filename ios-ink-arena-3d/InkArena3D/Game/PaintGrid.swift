@@ -305,6 +305,9 @@ final class PaintGrid {
     /// True while the textured quad is what the player actually sees.
     var usesTexturePaint: Bool { canvasSurface != nil }
 
+    /// GPU uploads performed by the canvas surface — diagnostics overlay only.
+    var canvasUploadCount: Int { canvasSurface?.uploadCount ?? 0 }
+
     /// Pushes any ink painted since the last tick to the GPU. Called once per
     /// frame from the simulation loop; no-op on the geometry path.
     func flushCanvas(dt: Float) {

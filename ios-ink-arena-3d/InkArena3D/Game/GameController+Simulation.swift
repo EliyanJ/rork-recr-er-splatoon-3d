@@ -208,12 +208,18 @@ extension GameController {
         }
         let stats = PaintPerfStats(
             activeEntities: grid.activePaintEntities,
-            legacyDrawCalls: grid.paintedTileCount
+            legacyDrawCalls: grid.paintedTileCount,
+            usesTexture: grid.usesTexturePaint,
+            canvasStamps: grid.canvas.stampCount,
+            canvasPixels: grid.canvas.writtenPixelCount,
+            canvasUploads: grid.canvasUploadCount,
+            lastStampX: grid.canvas.lastStampX,
+            lastStampY: grid.canvas.lastStampY
         )
         if stats != paintPerfStats { paintPerfStats = stats }
         if elapsed - lastPaintPerfLog > 0.5 {
             lastPaintPerfLog = elapsed
-            NSLog("[PaintPerf] paint draw calls: \(stats.activeEntities) (batched) vs \(stats.legacyDrawCalls) (legacy per-tile)")
+            NSLog("[PaintPerf] texture=\(stats.usesTexture) stamps=\(stats.canvasStamps) px=\(stats.canvasPixels) uploads=\(stats.canvasUploads) last=(\(stats.lastStampX),\(stats.lastStampY)) tiles=\(stats.legacyDrawCalls)")
         }
     }
 

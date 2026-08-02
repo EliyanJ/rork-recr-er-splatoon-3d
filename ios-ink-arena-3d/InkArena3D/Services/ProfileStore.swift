@@ -166,6 +166,13 @@ final class ProfileStore {
         didSet { defaults.set(autoGraphicsQuality, forKey: Keys.autoGraphicsQuality) }
     }
 
+    /// Shows the live paint diagnostic overlay during a match (blots written,
+    /// pixels touched, GPU uploads). Off by default — it is a troubleshooting
+    /// tool, not a feature.
+    var paintDebugOverlay: Bool {
+        didSet { defaults.set(paintDebugOverlay, forKey: Keys.paintDebugOverlay) }
+    }
+
     /// Paint rendering path used from the next match on: the ink texture
     /// (one quad, constant cost) when true, the historical merged splat
     /// meshes when false. Exposed so a device where the textured path
@@ -244,6 +251,7 @@ final class ProfileStore {
         static let graphicsQuality = "profile.graphicsQuality"
         static let autoGraphicsQuality = "profile.autoGraphicsQuality"
         static let texturePaint = "profile.texturePaint"
+        static let paintDebugOverlay = "profile.paintDebugOverlay"
         static let targetFPS = "profile.targetFPS"
         static let trophies = "profile.trophies"
         static let coins = "profile.coins"
@@ -285,6 +293,7 @@ final class ProfileStore {
         }
         autoGraphicsQuality = defaults.object(forKey: Keys.autoGraphicsQuality) as? Bool ?? true
         texturePaintEnabled = defaults.object(forKey: Keys.texturePaint) as? Bool ?? true
+        paintDebugOverlay = defaults.object(forKey: Keys.paintDebugOverlay) as? Bool ?? false
         let storedFPS = defaults.integer(forKey: Keys.targetFPS)
         targetFPS = [30, 60, 120].contains(storedFPS) ? storedFPS : 60
         trophies = defaults.integer(forKey: Keys.trophies)

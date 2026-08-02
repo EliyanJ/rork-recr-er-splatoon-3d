@@ -100,20 +100,24 @@ struct GameHUDView: View {
     /// Debug-only overlay: live paint draw-call count (batched vs the legacy
     /// one-entity-per-tile design). Shown when `GameConfig.paintPerfDebug` is on.
     private func paintPerfOverlay(_ stats: PaintPerfStats) -> some View {
-        let saved = stats.legacyDrawCalls - stats.activeEntities
-        let factor = stats.activeEntities > 0
-            ? Double(stats.legacyDrawCalls) / Double(stats.activeEntities)
-            : 0
-        return VStack(alignment: .leading, spacing: 3) {
-            Text("PAINT PERF")
+        VStack(alignment: .leading, spacing: 3) {
+            Text(stats.usesTexture ? "PAINT — TEXTURE" : "PAINT — MESHES")
                 .font(.system(size: 10, weight: .heavy, design: .monospaced))
                 .foregroundStyle(.yellow)
-            Text("draw calls: \(stats.activeEntities)")
-                .foregroundStyle(.green)
-            Text("legacy (per-tile): \(stats.legacyDrawCalls)")
-                .foregroundStyle(.white.opacity(0.7))
-            Text("saved: \(saved)  (\(String(format: "%.1f", factor))×)")
-                .foregroundStyle(.cyan)
+            // Rises on every shot that reached paintable ground. Flat while
+            // firing = the paint call never happens (upstream problem).
+            Text("blots: \(stats.canvasStamps)")
+                .foregroundStyle(stats.canvasStamps > 0 ? .green : .red)
+            Text("pixels: \(stats.canvasPixels)")
+                .foregroundStyle(.white.opacity(0.75))
+            // Must climb while painting. Frozen = the image never reaches
+            // the GPU (display problem).
+            Text("uploads: \(stats.canvasUploads)")
+                .foregroundStyle(stats.canvasUploads > 0 ? .cyan : .red)
+            Text("last: \(stats.lastStampX),\(stats.lastStampY)")
+                .foregroundStyle(.white.opacity(0.6))
+            Text("tiles: \(stats.legacyDrawCalls)  mesh: \(stats.activeEntities)")
+                .foregroundStyle(.white.opacity(0.6))
         }
         .font(.system(size: 11, weight: .semibold, design: .monospaced))
         .padding(8)
@@ -733,6 +737,7 @@ struct SettingsOverlay: View {
     @State private var quality = ProfileStore.shared.graphicsQuality
     @State private var autoQuality = ProfileStore.shared.autoGraphicsQuality
     @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
+    @State private var paintDebug = ProfileStore.shared.paintDebugOverlay
     @State private var fps = ProfileStore.shared.targetFPS
     @State private var sensitivity = ProfileStore.shared.cameraSensitivity
     /// Guards against an accidental tap ending the match.
@@ -912,6 +917,22 @@ struct SettingsOverlay: View {
                     .tint(Team.orange.color)
                     .onChange(of: texturePaint) { _, newValue in
                         ProfileStore.shared.texturePaintEnabled = newValue
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+
+                    Toggle(isOn: $paintDebug) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("DIAGNOSTIC PEINTURE")
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("Affiche en match les compteurs d'encre déposée.")
+                                .font(.system(size: 9, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.45))
+                        }
+                    }
+                    .tint(Team.purple.color)
+                    .onChange(of: paintDebug) { _, newValue in
+                        ProfileStore.shared.paintDebugOverlay = newValue
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }

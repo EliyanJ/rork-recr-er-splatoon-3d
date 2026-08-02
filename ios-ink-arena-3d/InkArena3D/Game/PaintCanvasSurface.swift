@@ -49,6 +49,9 @@ final class PaintCanvasSurface {
     /// splat of a burst could stay invisible until the next shot.
     private var hasPendingBlit = false
 
+    /// Diagnostics only — GPU uploads actually committed.
+    private(set) var uploadCount = 0
+
     /// Sits just above the floor: high enough to beat z-fighting with the
     /// ground, low enough that the ink still reads as lying ON it. Matches the
     /// old splat height (`surface + 0.022`).
@@ -203,5 +206,6 @@ final class PaintCanvasSurface {
         blit.endEncoding()
         commandBuffer.commit()
         hasPendingBlit = false
+        uploadCount += 1
     }
 }

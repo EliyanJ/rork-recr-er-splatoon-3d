@@ -78,6 +78,10 @@ final class PaintCanvas {
     /// Diagnostics only — how much work the canvas has actually done.
     private(set) var stampCount = 0
     private(set) var writtenPixelCount = 0
+    /// Pixel centre of the most recent blot, for checking the world→texture
+    /// mapping against where the shot actually landed.
+    private(set) var lastStampX = -1
+    private(set) var lastStampY = -1
 
     /// The region touched since the last `clearDirtyRect()`, or nil if the
     /// buffer is unchanged. The GPU upload step will consume exactly this.
@@ -281,6 +285,8 @@ final class PaintCanvas {
         }
 
         guard written > 0 else { return }
+        lastStampX = Int(centerX)
+        lastStampY = Int(centerY)
         stampCount += 1
         writtenPixelCount += written
         markDirty(minX: touchedMinX, minY: touchedMinY, maxX: touchedMaxX, maxY: touchedMaxY)
