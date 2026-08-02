@@ -175,14 +175,6 @@ final class PaintGrid {
     private let orangeInk: SIMD4<UInt8>
     private let purpleInk: SIMD4<UInt8>
     private let heightAt: (Float, Float) -> Float
-    /// Height of the walkable surface over every tile, sampled once at setup.
-    /// The arena's structures are static, so this never changes — it turns the
-    /// per-pixel "which level am I painting?" test into an array lookup.
-    private var tileSurfaceY: [Float]
-    /// How far a pixel's surface may differ from the impact's before it is
-    /// treated as another level. Below any real step (crates start at 0.9 m),
-    /// above the tolerance of a flat top.
-    private static let levelTolerance: Float = 0.45
     /// Declared surface (fixed plane + bounds) plating the tile at (x, z), or
     /// nil for open floor. Drives the splat's fixed orientation and edge clip.
     private let surfaceAt: (Float, Float) -> SurfaceClip?
@@ -259,14 +251,6 @@ final class PaintGrid {
         owners = Array(repeating: nil, count: cols * rows)
         instances = Array(repeating: nil, count: cols * rows)
         blockedTiles = Array(repeating: false, count: cols * rows)
-        // Local copies: reading `cols`/`rows` inside the closure would capture
-        // `self` before initialization finishes.
-        let tileCols = cols
-        tileSurfaceY = (0..<(tileCols * rows)).map { index in
-            let cx = (Float(index % tileCols) + 0.5) * GameConfig.tileSize - GameConfig.arenaWidth / 2
-            let cz = (Float(index / tileCols) + 0.5) * GameConfig.tileSize - GameConfig.arenaDepth / 2
-            return heightAt(cx, cz)
-        }
         canvas = PaintCanvas(
             arenaWidth: GameConfig.arenaWidth,
             arenaDepth: GameConfig.arenaDepth
@@ -325,14 +309,6 @@ final class PaintGrid {
     /// every splat already carries its own surface height.
     func addSurfaceDecks(_ decks: [PaintCanvasSurface.Deck]) {
         canvasSurface?.addDecks(decks)
-    }
-
-    /// Walkable-surface height over a world point — O(1) table lookup.
-    private func surfaceY(atX x: Float, z: Float) -> Float {
-        let col = Int((x + GameConfig.arenaWidth / 2) / GameConfig.tileSize)
-        let row = Int((z + GameConfig.arenaDepth / 2) / GameConfig.tileSize)
-        guard col >= 0, col < cols, row >= 0, row < rows else { return 0 }
-        return tileSurfaceY[row * cols + col]
     }
 
     /// True while the textured quad is what the player actually sees.
@@ -450,20 +426,21 @@ final class PaintGrid {
         // Visual-only, runs in parallel with the mesh path for now. Written on
         // every call (not only when tiles are gained) so re-inking already-held
         // ground still refreshes the image, exactly like the splats do.
-        // A texel is a column of the arena, but a column can hold several
-        // walkable levels (floor, crate top, platform). Ink is confined to the
-        // level it was actually laid on, otherwise a shot bursting on the floor
-        // beside a crate would climb onto the crate's deck quad, which samples
-        // the very same texels.
-        let impactY = surfaceY(atX: x, z: z)
+        // Every pixel inside the 2D radius is written, whatever its height —
+        // exactly what the mesh path does (each tile in radius takes a splat at
+        // its own level). The earlier "same level as the impact only" filter
+        // rejected the whole floor around any structure hit (a top graze put
+        // the reference at the summit, so every ground pixel differed by
+        // metres) and its tile-centre sampling cut hard straight lines into
+        // flat ground — the dead zones. Water/ramp/out-of-arena stay excluded,
+        // nothing else.
         canvas.stamp(
             atX: x,
             z: z,
             radius: radius,
             color: team == .orange ? orangeInk : purpleInk
         ) { worldX, worldZ in
-            if isBlockedWorld(x: worldX, z: worldZ) { return true }
-            return abs(surfaceY(atX: worldX, z: worldZ) - impactY) > PaintGrid.levelTolerance
+            isBlockedWorld(x: worldX, z: worldZ)
         }
 
         var gained = 0

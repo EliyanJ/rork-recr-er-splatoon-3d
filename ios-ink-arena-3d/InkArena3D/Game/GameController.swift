@@ -639,6 +639,15 @@ final class GameController {
     /// Throttles the debug console log to ~2 Hz.
     @ObservationIgnored var lastPaintPerfLog: Double = 0
 
+    // MARK: - Performance monitor
+    /// Live FPS / CPU / RAM readout, published for the HUD overlay while the
+    /// player has « Moniteur performances » enabled in Settings; nil otherwise.
+    var perfStats: PerfStats?
+    /// Frames rendered since the last perf publish.
+    @ObservationIgnored var perfFrameCount = 0
+    /// Wall time accumulated since the last perf publish.
+    @ObservationIgnored var perfTimeAccum: Float = 0
+
     var obstacles: [Obstacle] = []
     /// Walkable subset of `obstacles`, precomputed so the per-frame height
     /// queries never scan the full blocker list.

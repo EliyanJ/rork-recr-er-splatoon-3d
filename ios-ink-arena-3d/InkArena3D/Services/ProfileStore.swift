@@ -173,6 +173,12 @@ final class ProfileStore {
         didSet { defaults.set(paintDebugOverlay, forKey: Keys.paintDebugOverlay) }
     }
 
+    /// Shows the live FPS / CPU / RAM overlay during a match — lets the
+    /// player see what the game costs on their own device.
+    var perfOverlayEnabled: Bool {
+        didSet { defaults.set(perfOverlayEnabled, forKey: Keys.perfOverlay) }
+    }
+
     /// Paint rendering path used from the next match on: the ink texture
     /// (one quad, constant cost) when true, the historical merged splat
     /// meshes when false. Exposed so a device where the textured path
@@ -252,6 +258,7 @@ final class ProfileStore {
         static let autoGraphicsQuality = "profile.autoGraphicsQuality"
         static let texturePaint = "profile.texturePaint"
         static let paintDebugOverlay = "profile.paintDebugOverlay"
+        static let perfOverlay = "profile.perfOverlay"
         static let targetFPS = "profile.targetFPS"
         static let trophies = "profile.trophies"
         static let coins = "profile.coins"
@@ -294,6 +301,7 @@ final class ProfileStore {
         autoGraphicsQuality = defaults.object(forKey: Keys.autoGraphicsQuality) as? Bool ?? true
         texturePaintEnabled = defaults.object(forKey: Keys.texturePaint) as? Bool ?? true
         paintDebugOverlay = defaults.object(forKey: Keys.paintDebugOverlay) as? Bool ?? false
+        perfOverlayEnabled = defaults.object(forKey: Keys.perfOverlay) as? Bool ?? false
         let storedFPS = defaults.integer(forKey: Keys.targetFPS)
         targetFPS = [30, 60, 120].contains(storedFPS) ? storedFPS : 60
         trophies = defaults.integer(forKey: Keys.trophies)

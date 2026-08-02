@@ -86,6 +86,10 @@ struct GameHUDView: View {
                 paintPerfOverlay(stats)
             }
 
+            if let perf = controller.perfStats {
+                perfOverlay(perf)
+            }
+
             if controller.isTraining {
                 trainingWeaponStand
             }
@@ -125,6 +129,30 @@ struct GameHUDView: View {
         .padding(.leading, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         .padding(.bottom, 120)
+        .allowsHitTesting(false)
+    }
+
+    /// Live FPS / CPU / RAM readout — shown while « Moniteur performances »
+    /// is enabled in Settings. iOS does not expose per-app GPU load to apps;
+    /// the frame time is the honest proxy (high frame time + low CPU = GPU).
+    private func perfOverlay(_ perf: PerfStats) -> some View {
+        let fpsColor: Color = perf.fps >= 50 ? .green : (perf.fps >= 30 ? .yellow : .red)
+        return VStack(alignment: .trailing, spacing: 3) {
+            Text("\(perf.fps) FPS")
+                .font(.system(size: 15, weight: .black, design: .monospaced))
+                .foregroundStyle(fpsColor)
+            Text(String(format: "%.1f ms/img", perf.frameMs))
+                .foregroundStyle(.white.opacity(0.75))
+            Text(String(format: "CPU %.0f%%", perf.cpuPercent))
+                .foregroundStyle(perf.cpuPercent > 250 ? .orange : .white.opacity(0.75))
+            Text("RAM \(perf.memoryMB) Mo")
+                .foregroundStyle(.white.opacity(0.75))
+        }
+        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(.black.opacity(0.6)))
+        .padding(.trailing, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
         .allowsHitTesting(false)
     }
 
@@ -738,6 +766,7 @@ struct SettingsOverlay: View {
     @State private var autoQuality = ProfileStore.shared.autoGraphicsQuality
     @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
     @State private var paintDebug = ProfileStore.shared.paintDebugOverlay
+    @State private var perfOverlay = ProfileStore.shared.perfOverlayEnabled
     @State private var fps = ProfileStore.shared.targetFPS
     @State private var sensitivity = ProfileStore.shared.cameraSensitivity
     /// Guards against an accidental tap ending the match.
@@ -933,6 +962,22 @@ struct SettingsOverlay: View {
                     .tint(Team.purple.color)
                     .onChange(of: paintDebug) { _, newValue in
                         ProfileStore.shared.paintDebugOverlay = newValue
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+
+                    Toggle(isOn: $perfOverlay) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("MONITEUR PERFORMANCES")
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("FPS, temps par image, CPU et mémoire en direct. Prend effet immédiatement.")
+                                .font(.system(size: 9, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.45))
+                        }
+                    }
+                    .tint(.green)
+                    .onChange(of: perfOverlay) { _, newValue in
+                        ProfileStore.shared.perfOverlayEnabled = newValue
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }

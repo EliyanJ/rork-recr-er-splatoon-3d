@@ -10,6 +10,10 @@ extension GameController {
     func update(deltaTime rawDt: Float) {
         guard isSceneReady, let grid, let playerContainer, let camera else { return }
 
+        // Sampled BEFORE the FPS governor: the overlay must show the real
+        // display rate, not the paced simulation rate.
+        updatePerfMonitor(rawDt: rawDt)
+
         // Real FPS governor: paces the whole simulation to the target rate
         // chosen in Settings (30/60/120). Skipped frames leave the scene
         // untouched, so CPU cost and motion updates genuinely follow the
@@ -197,6 +201,29 @@ extension GameController {
         reapplyRuntimeQuality()
         qualityDowngradeNotice = "Qualité ajustée pour préserver la fluidité"
         qualityNoticeTimer = 3
+    }
+
+    /// Publishes the FPS / CPU / RAM overlay at 2 Hz while enabled in
+    /// Settings. The between-publish cost is two counter increments; the Mach
+    /// samplers only run when a snapshot is actually published.
+    private func updatePerfMonitor(rawDt: Float) {
+        guard ProfileStore.shared.perfOverlayEnabled else {
+            if perfStats != nil { perfStats = nil }
+            return
+        }
+        perfFrameCount += 1
+        perfTimeAccum += rawDt
+        guard perfTimeAccum >= 0.5, perfFrameCount > 0 else { return }
+        let avgFrame = perfTimeAccum / Float(perfFrameCount)
+        let stats = PerfStats(
+            fps: Int((1 / max(avgFrame, 0.0001)).rounded()),
+            frameMs: (Double(avgFrame) * 10_000).rounded() / 10,
+            cpuPercent: (PerfSampler.cpuUsagePercent() * 10).rounded() / 10,
+            memoryMB: PerfSampler.memoryFootprintMB()
+        )
+        perfFrameCount = 0
+        perfTimeAccum = 0
+        if stats != perfStats { perfStats = stats }
     }
 
     /// Publishes and logs the live paint draw-call counts when the debug flag

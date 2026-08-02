@@ -43,6 +43,7 @@ struct SettingsScreen: View {
     @State private var quality = ProfileStore.shared.graphicsQuality
     @State private var autoQuality = ProfileStore.shared.autoGraphicsQuality
     @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
+    @State private var perfOverlay = ProfileStore.shared.perfOverlayEnabled
     @State private var fps = ProfileStore.shared.targetFPS
     @State private var showResetConfirm = false
     @State private var didResetHUD = false
@@ -340,6 +341,22 @@ struct SettingsScreen: View {
                 .tint(.menuAccent)
                 .onChange(of: texturePaint) { _, newValue in
                     ProfileStore.shared.texturePaintEnabled = newValue
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+
+                Toggle(isOn: $perfOverlay) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("MONITEUR PERFORMANCES")
+                            .font(.system(size: 10.5 * scale, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Affiche en match les FPS, le temps par image, la charge CPU et la mémoire. iOS ne communique pas la charge GPU aux apps: un temps par image élevé avec un CPU bas signale un goûlot GPU.")
+                            .font(.system(size: 9 * scale, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                }
+                .tint(.menuAccent)
+                .onChange(of: perfOverlay) { _, newValue in
+                    ProfileStore.shared.perfOverlayEnabled = newValue
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             }
