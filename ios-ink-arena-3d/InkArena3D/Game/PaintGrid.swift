@@ -1,3 +1,4 @@
+import Combine
 import RealityKit
 import UIKit
 import simd
@@ -19,11 +20,52 @@ private struct SplitMix64: RandomNumberGenerator {
 /// Raw geometry of one pre-generated ink-splash variant, kept in CPU memory
 /// so painted tiles can be merged (transformed + appended) into a single
 /// chunk mesh at runtime — no per-tile MeshResource is ever generated.
-private struct SplashGeometry {
+/// `nonisolated` (like every value type below) so the chunk merge can run off
+/// the MainActor: these carry only scalars and simd data, no RealityKit object.
+nonisolated private struct SplashGeometry: Sendable {
     let positions: [SIMD3<Float>]
     let normals: [SIMD3<Float>]
     let uvs: [SIMD2<Float>]
     let indices: [UInt32]
+}
+
+/// Result of merging a chunk's tiles: raw vertex data, ready to be handed to
+/// RealityKit back on the MainActor.
+nonisolated private struct MergedGeometry: Sendable {
+    let positions: [SIMD3<Float>]
+    let normals: [SIMD3<Float>]
+    let uvs: [SIMD2<Float>]
+    let indices: [UInt32]
+
+    var isEmpty: Bool { positions.isEmpty }
+
+    /// Same geometry expressed as `MeshResource.Contents`, the form
+    /// `replaceAsync(with:)` needs to refill an existing mesh in place.
+    func contents() -> MeshResource.Contents {
+        var part = MeshResource.Part(id: "inkPart", materialIndex: 0)
+        part.positions = MeshBuffers.Positions(positions)
+        part.normals = MeshBuffers.Normals(normals)
+        part.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
+        part.triangleIndices = MeshBuffers.TriangleIndices(indices)
+        var contents = MeshResource.Contents()
+        contents.models = MeshModelCollection([
+            MeshResource.Model(id: "inkModel", parts: [part])
+        ])
+        contents.instances = MeshInstanceCollection([
+            MeshResource.Instance(id: "inkInstance", model: "inkModel")
+        ])
+        return contents
+    }
+
+    /// Descriptor form, used only for a chunk's very first mesh creation.
+    func descriptor() -> MeshDescriptor {
+        var descriptor = MeshDescriptor(name: "inkChunk")
+        descriptor.positions = MeshBuffers.Positions(positions)
+        descriptor.normals = MeshBuffers.Normals(normals)
+        descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
+        descriptor.primitives = .triangles(indices)
+        return descriptor
+    }
 }
 
 /// A flat, bounded region of a declared surface (crate top, platform, …)
@@ -35,7 +77,7 @@ private struct SplashGeometry {
 /// rectangle, and restores its offset along the normal, so any part of a
 /// splat that would spill past the real surface edge is cut flush to it.
 /// Purely geometric (no allocation), run once per tile at bake/merge time.
-struct SurfaceClip {
+nonisolated struct SurfaceClip: Sendable {
     let center: SIMD3<Float>
     let normal: SIMD3<Float>
     let axisU: SIMD3<Float>
@@ -58,7 +100,7 @@ struct SurfaceClip {
 /// the surface it sits on (for edge clipping). Computed once when the tile is
 /// first claimed and never mutated after — only the tile's OWNER changes,
 /// which just moves it between team buffers.
-private struct TileInstance {
+nonisolated private struct TileInstance: Sendable {
     let matrix: float4x4
     let rotation: simd_quatf
     let meshPick: Int
@@ -138,6 +180,10 @@ final class PaintGrid {
     /// FIFO order for the per-flush rebuild budget so no slot starves.
     private var dirtySlots: Set<Int> = []
     private var dirtyQueue: [Int] = []
+    /// Slots whose merge is currently running off the MainActor. A slot already
+    /// in flight is never merged twice concurrently: it is simply re-marked
+    /// dirty so the next flush rebuilds it from the newer ownership state.
+    private var rebuildingSlots: Set<Int> = []
 
     private(set) var orangeCount = 0
     private(set) var purpleCount = 0
@@ -416,12 +462,22 @@ final class PaintGrid {
     /// this visual merge is budgeted.
     func flushPaintBatches(maxRebuilds: Int) {
         var processed = 0
+        var requeue: [Int] = []
         while processed < maxRebuilds, !dirtyQueue.isEmpty {
             let slot = dirtyQueue.removeFirst()
             // Skip stale queue entries (already flushed or de-duped).
             guard dirtySlots.remove(slot) != nil else { continue }
-            rebuildChunk(slot / 2, team: slot % 2 == 0 ? .orange : .purple)
+            // Already merging: re-mark dirty AFTER this loop so it isn't picked
+            // again in the same flush, and don't spend budget on it.
+            if rebuildingSlots.contains(slot) {
+                requeue.append(slot)
+                continue
+            }
+            startRebuild(slot: slot)
             processed += 1
+        }
+        for slot in requeue where dirtySlots.insert(slot).inserted {
+            dirtyQueue.append(slot)
         }
     }
 
@@ -439,18 +495,64 @@ final class PaintGrid {
         }
     }
 
-    /// Merges every claimed cell of `team` inside `chunk` into a single mesh
-    /// on that chunk/team's persistent ModelEntity (created lazily, reused for
-    /// the life of the match, and detached when the chunk empties of that team).
-    private func rebuildChunk(_ chunk: Int, team: Team) {
+    /// Starts the rebuild of one (chunk, team) slot: snapshots the chunk's
+    /// claimed tiles on the MainActor (cheap — value types only), merges the
+    /// geometry OFF the MainActor, then applies the result back on it.
+    ///
+    /// PERFORMANCE — the merge loop (world-transforming and clipping every
+    /// vertex of every painted tile) used to run inline on the MainActor, right
+    /// in the middle of the frame, together with a synchronous
+    /// `MeshResource.generate`. On a chunk holding a few hundred splats that is
+    /// milliseconds of vertex math blocking the render loop, which is what made
+    /// sustained firing stutter. Now only the snapshot and the RealityKit upload
+    /// touch the MainActor.
+    private func startRebuild(slot: Int) {
+        let chunk = slot / 2
+        let team: Team = slot % 2 == 0 ? .orange : .purple
+
+        var tiles: [TileInstance] = []
+        forEachCell(inChunk: chunk) { index in
+            guard owners[index] == team, let instance = instances[index] else { return }
+            tiles.append(instance)
+        }
+        // Nothing left of this team here — detach synchronously, no merge needed.
+        guard !tiles.isEmpty else {
+            detachChunk(slot: slot)
+            return
+        }
+
+        let geometries = splashGeometries
+        rebuildingSlots.insert(slot)
+        Task { @MainActor [weak self] in
+            let merged = await PaintGrid.mergeTiles(tiles, geometries: geometries)
+            guard let self else { return }
+            await self.applyMerged(merged, slot: slot, team: team)
+            self.rebuildingSlots.remove(slot)
+        }
+    }
+
+    /// Pure geometry merge — no RealityKit, no actor state, only value types,
+    /// so it runs on the cooperative pool instead of the MainActor.
+    nonisolated private static func mergeTiles(
+        _ tiles: [TileInstance],
+        geometries: [SplashGeometry]
+    ) async -> MergedGeometry {
         var positions: [SIMD3<Float>] = []
         var normals: [SIMD3<Float>] = []
         var uvs: [SIMD2<Float>] = []
         var indices: [UInt32] = []
+        // One splash silhouette's worth of vertices per tile, give or take —
+        // reserving up front keeps the merge allocation-free.
+        if let sample = geometries.first {
+            positions.reserveCapacity(tiles.count * sample.positions.count)
+            normals.reserveCapacity(tiles.count * sample.normals.count)
+            uvs.reserveCapacity(tiles.count * sample.uvs.count)
+            indices.reserveCapacity(tiles.count * sample.indices.count)
+        }
 
-        forEachCell(inChunk: chunk) { index in
-            guard owners[index] == team, let instance = instances[index] else { return }
-            let geo = splashGeometries[instance.meshPick]
+        for instance in tiles {
+            guard instance.meshPick >= 0, instance.meshPick < geometries.count else { continue }
+            let geo = geometries[instance.meshPick]
             let vertexOffset = UInt32(positions.count)
             let clip = instance.clip
             for p in geo.positions {
@@ -469,31 +571,35 @@ final class PaintGrid {
                 indices.append(i + vertexOffset)
             }
         }
+        return MergedGeometry(positions: positions, normals: normals, uvs: uvs, indices: indices)
+    }
 
-        let slot = chunk * 2 + teamSlot(team)
-        if positions.isEmpty {
-            if let entity = chunkEntities[slot] {
-                entity.removeFromParent()
-                chunkEntities[slot] = nil
-                activePaintEntities -= 1
-            }
+    /// Applies a finished merge to the chunk/team entity. An existing chunk has
+    /// its MeshResource refilled in place via `replaceAsync`; `generate` is only
+    /// ever called for a chunk's very first mesh.
+    private func applyMerged(_ merged: MergedGeometry, slot: Int, team: Team) async {
+        guard !merged.isEmpty else {
+            detachChunk(slot: slot)
             return
         }
-
-        var descriptor = MeshDescriptor(name: "inkChunk")
-        descriptor.positions = MeshBuffers.Positions(positions)
-        descriptor.normals = MeshBuffers.Normals(normals)
-        descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
-        descriptor.primitives = .triangles(indices)
-        guard let mesh = try? MeshResource.generate(from: [descriptor]) else { return }
-
-        if let entity = chunkEntities[slot] {
-            entity.model?.mesh = mesh
-        } else {
-            let entity = ModelEntity(mesh: mesh, materials: [material(for: team)])
-            chunkEntities[slot] = entity
-            root.addChild(entity)
-            activePaintEntities += 1
+        if let entity = chunkEntities[slot], let mesh = entity.model?.mesh {
+            // `replaceAsync` hands back a Combine publisher rather than an
+            // awaitable value, so it is consumed as an async sequence.
+            _ = try? await mesh.replaceAsync(with: merged.contents()).values.first { _ in true }
+            return
         }
+        guard let mesh = try? MeshResource.generate(from: [merged.descriptor()]) else { return }
+        let entity = ModelEntity(mesh: mesh, materials: [material(for: team)])
+        chunkEntities[slot] = entity
+        root.addChild(entity)
+        activePaintEntities += 1
+    }
+
+    /// Removes the chunk/team entity once no tile of that team remains there.
+    private func detachChunk(slot: Int) {
+        guard let entity = chunkEntities[slot] else { return }
+        entity.removeFromParent()
+        chunkEntities[slot] = nil
+        activePaintEntities -= 1
     }
 }
