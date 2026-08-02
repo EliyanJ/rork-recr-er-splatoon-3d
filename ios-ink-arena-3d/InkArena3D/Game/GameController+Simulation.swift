@@ -70,6 +70,8 @@ extension GameController {
         // average with frames where nothing is simulated.
         startPerfRecordingIfArmed()
         perf.noteFrame(rawDt: rawDt)
+        startPerfBisectionIfArmed()
+        PerfBisector.shared.tick(rawDt: rawDt)
 
         // Training is a pure sandbox: no clock, no end-of-match.
         if !isMatchOver && !isTraining {
@@ -207,10 +209,16 @@ extension GameController {
     private func startPerfRecordingIfArmed() {
         let recorder = PerfRecorder.shared
         guard !recorder.isRecording, ProfileStore.shared.perfRecorderEnabled else { return }
+        recorder.start(context: perfRunContext())
+    }
+
+    /// Snapshot of everything needed to read a report without asking the
+    /// player follow-up questions. Shared by the trace and the GPU sweep.
+    private func perfRunContext() -> PerfRunContext {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        recorder.start(context: PerfRunContext(
+        return PerfRunContext(
             device: PerfSampler.deviceModelIdentifier(),
             systemVersion: UIDevice.current.systemVersion,
             appVersion: "\(version) (\(build))",
@@ -225,7 +233,15 @@ extension GameController {
             botCount: bots.count,
             isLocalDuel: isLocalDuel,
             isTraining: isTraining
-        ))
+        )
+    }
+
+    /// Opens the GPU subtraction sweep on the first live frame when armed.
+    /// Skipped in training, whose sandbox has none of the arena layers.
+    private func startPerfBisectionIfArmed() {
+        let bisector = PerfBisector.shared
+        guard !bisector.isRunning, !isTraining, ProfileStore.shared.perfBisectorEnabled else { return }
+        bisector.start(context: perfRunContext())
     }
 
     /// Tracks sustained frame time; if the game runs under 45 FPS for more

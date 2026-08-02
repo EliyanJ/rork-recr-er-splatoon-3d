@@ -18,7 +18,7 @@ struct PerfReportView: View {
             VStack(alignment: .leading, spacing: 10) {
                 header
 
-                if let report = recorder.lastReport {
+                if let report = combinedReport {
                     ScrollView(showsIndicators: true) {
                         Text(report)
                             .font(.system(size: 10, weight: .medium, design: .monospaced))
@@ -41,6 +41,14 @@ struct PerfReportView: View {
             Button("Annuler", role: .cancel) {}
             Button("Effacer", role: .destructive) { recorder.clearReport() }
         }
+    }
+
+    /// The frame trace and the GPU subtraction sweep are produced by two
+    /// different runs; showing them as one block means a single copy/paste
+    /// carries everything we need to read the session.
+    private var combinedReport: String? {
+        let parts = [recorder.lastBisection, recorder.lastReport].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: "\n\n")
     }
 
     private var header: some View {

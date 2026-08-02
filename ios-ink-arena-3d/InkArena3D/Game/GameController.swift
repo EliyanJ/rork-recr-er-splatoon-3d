@@ -284,6 +284,13 @@ final class GameController {
     /// downgrade can switch the whole decorative layer off at once instead of
     /// only affecting matches started afterwards.
     @ObservationIgnored var decorRoot: Entity?
+    /// Parent of every immobile arena surface (floor, walls, platforms, ramps,
+    /// crates, backdrop). Retained so the static batcher and the GPU
+    /// subtraction sweep can address the whole layer at once.
+    @ObservationIgnored var staticArenaRoot: Entity?
+    /// The panoramic sky sphere — a single huge draw that covers every pixel
+    /// the arena doesn't, hence a prime suspect in any fill-rate question.
+    @ObservationIgnored var skyDome: Entity?
     /// The two arena lights, retained so a runtime downgrade can dim or drop
     /// them mid-match instead of waiting for the next match.
     @ObservationIgnored var sunLight: DirectionalLight?

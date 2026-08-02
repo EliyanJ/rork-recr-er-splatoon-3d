@@ -73,6 +73,9 @@ final class PerfRecorder {
     private(set) var isRecording = false
     /// Latest finished report, persisted so it survives leaving the match.
     private(set) var lastReport: String?
+    /// Latest finished GPU subtraction sweep (see `PerfBisector`), kept apart
+    /// from the main trace so one never overwrites the other.
+    private(set) var lastBisection: String?
 
     // MARK: - Accumulators
 
@@ -114,9 +117,17 @@ final class PerfRecorder {
 
     private let defaults = UserDefaults.standard
     private let reportKey = "perf.lastReport"
+    private let bisectionKey = "perf.lastBisection"
 
     private init() {
         lastReport = defaults.string(forKey: reportKey)
+        lastBisection = defaults.string(forKey: bisectionKey)
+    }
+
+    /// Persists a finished GPU subtraction sweep.
+    func storeBisection(_ report: String) {
+        lastBisection = report
+        defaults.set(report, forKey: bisectionKey)
     }
 
     // MARK: - Lifecycle
@@ -159,7 +170,9 @@ final class PerfRecorder {
 
     func clearReport() {
         lastReport = nil
+        lastBisection = nil
         defaults.removeObject(forKey: reportKey)
+        defaults.removeObject(forKey: bisectionKey)
     }
 
     // MARK: - Sampling

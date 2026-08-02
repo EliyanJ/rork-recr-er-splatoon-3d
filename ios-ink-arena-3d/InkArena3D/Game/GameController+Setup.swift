@@ -108,6 +108,7 @@ extension GameController {
             let staticRoot = Entity()
             staticRoot.name = "static_arena"
             root.addChild(staticRoot)
+            staticArenaRoot = staticRoot
             buildArena(staticRoot)
             buildCityBackdrop(staticRoot)
             mergeStaticArena(staticRoot)
@@ -195,6 +196,8 @@ extension GameController {
             }
         }
 
+        configurePerfBisection()
+
         updateSubscription = content.subscribe(to: SceneEvents.Update.self) { [weak self] event in
             MainActor.assumeIsolated {
                 self?.update(deltaTime: Float(event.deltaTime))
@@ -228,6 +231,33 @@ extension GameController {
             produced: stats.produced,
             keptAsIs: stats.keptAsIs
         )
+    }
+
+    /// Declares the visual layers the GPU subtraction sweep can switch off.
+    ///
+    /// Ordered cheapest-to-suspect first so a report reads like an argument:
+    /// characters and decor are small, the arena and the ink surface cover the
+    /// whole screen, and the sky fills every remaining pixel. The closures are
+    /// evaluated at each phase start because bots die and respawn mid-match.
+    private func configurePerfBisection() {
+        PerfBisector.shared.configure(layers: [
+            PerfBisector.Layer(label: "décor") { [weak self] in
+                [self?.decorRoot].compactMap { $0 }
+            },
+            PerfBisector.Layer(label: "personnages") { [weak self] in
+                guard let self else { return [] }
+                return ([playerContainer] + bots.map(\.container)).compactMap { $0 }
+            },
+            PerfBisector.Layer(label: "peinture") { [weak self] in
+                [self?.grid?.root].compactMap { $0 }
+            },
+            PerfBisector.Layer(label: "arène") { [weak self] in
+                [self?.staticArenaRoot].compactMap { $0 }
+            },
+            PerfBisector.Layer(label: "ciel") { [weak self] in
+                [self?.skyDome].compactMap { $0 }
+            },
+        ])
     }
 
     /// Hands the paint system an exact registry of the arena's ground.
@@ -332,7 +362,9 @@ extension GameController {
         // Negative X scale flips the winding so the texture renders inside.
         dome.scale = [-1, 1, 1]
         dome.position = [0, 0, 0]
+        dome.name = "sky_dome"
         root.addChild(dome)
+        skyDome = dome
     }
 
 }

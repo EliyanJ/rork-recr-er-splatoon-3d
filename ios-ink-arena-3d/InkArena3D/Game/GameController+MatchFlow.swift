@@ -412,6 +412,9 @@ extension GameController {
         // Single choke point for both the timer ending and a voluntary quit —
         // the trace is rendered here so no session is ever lost.
         PerfRecorder.shared.finish()
+        // A sweep interrupted mid-phase must put its hidden meshes back before
+        // the results screen fades the arena in behind the scoreboard.
+        PerfBisector.shared.cancel()
         isMatchOver = true
         isFiring = false
         joystick = .zero

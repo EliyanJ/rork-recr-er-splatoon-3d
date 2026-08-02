@@ -45,6 +45,7 @@ struct SettingsScreen: View {
     @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
     @State private var perfOverlay = ProfileStore.shared.perfOverlayEnabled
     @State private var perfRecorder = ProfileStore.shared.perfRecorderEnabled
+    @State private var perfBisector = ProfileStore.shared.perfBisectorEnabled
     @State private var showPerfReport = false
     @State private var recorder = PerfRecorder.shared
 
@@ -383,6 +384,22 @@ struct SettingsScreen: View {
                 .tint(.menuAccent)
                 .onChange(of: perfRecorder) { _, newValue in
                     ProfileStore.shared.perfRecorderEnabled = newValue
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+
+                Toggle(isOn: $perfBisector) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("TEST GPU PAR SOUSTRACTION")
+                            .font(.system(size: 10.5 * scale, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Pendant environ 45 s de jeu, masque tour à tour le décor, les personnages, la peinture, l'arène puis le ciel, et mesure ce que chacun coûte réellement. Le jeu continue normalement (collisions, tirs, bots): seule l'image change. Le résultat s'ajoute au rapport.")
+                            .font(.system(size: 9 * scale, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                }
+                .tint(.menuAccent)
+                .onChange(of: perfBisector) { _, newValue in
+                    ProfileStore.shared.perfBisectorEnabled = newValue
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
 
