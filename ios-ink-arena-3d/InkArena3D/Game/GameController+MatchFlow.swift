@@ -409,6 +409,9 @@ extension GameController {
     /// Freezes gameplay input/state the instant the match ends — shared by
     /// the timer, the host/guest paths, and the disconnect path.
     func beginMatchOver() {
+        // Single choke point for both the timer ending and a voluntary quit —
+        // the trace is rendered here so no session is ever lost.
+        PerfRecorder.shared.finish()
         isMatchOver = true
         isFiring = false
         joystick = .zero

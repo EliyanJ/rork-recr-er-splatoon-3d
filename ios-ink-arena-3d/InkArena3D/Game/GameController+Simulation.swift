@@ -48,7 +48,10 @@ extension GameController {
         // Recycle any expired hit/kill/burst VFX. Runs every frame (even while
         // the intro overlay idles) so lingering effects are torn down without
         // per-event async tasks. Freed budgeted entities restore the live count.
-        liveTransientVFX = max(0, liveTransientVFX - vfxPool.tick(now: elapsed))
+        let perf = PerfRecorder.shared
+        perf.measure(.vfx) {
+            liveTransientVFX = max(0, liveTransientVFX - vfxPool.tick(now: elapsed))
+        }
         updateQualityAutoDowngrade(dt: dt, rawDt: rawDt)
 
         // Before the intro countdown ends the scene only idles: camera,
@@ -62,6 +65,11 @@ extension GameController {
             updateCharacterLODThrottled(dt: dt, camera: camera)
             return
         }
+
+        // The trace only covers live play: the intro idle would dilute every
+        // average with frames where nothing is simulated.
+        startPerfRecordingIfArmed()
+        perf.noteFrame(rawDt: rawDt)
 
         // Training is a pure sandbox: no clock, no end-of-match.
         if !isMatchOver && !isTraining {
@@ -107,59 +115,117 @@ extension GameController {
         }
 
         pollDesktopInput()
-        updatePlayer(dt: dt, grid: grid, container: playerContainer)
-        updateDiveJumpCharge(dt: dtd)
+        perf.measure(.player) {
+            updatePlayer(dt: dt, grid: grid, container: playerContainer)
+            updateDiveJumpCharge(dt: dtd)
+        }
         if isLocalDuel {
-            networkTick(dt: dt)
-            flushNetPaintOps(dt: dtd)
-            duelBotNetTick(dt: dt)
-            if !isMatchOver {
-                matchAuthority?.tick(
-                    dt: clockDt,
-                    remaining: timeLeftExact,
-                    orange: grid.orangeCount,
-                    purple: grid.purpleCount,
-                    total: grid.totalCount,
-                    modeScores: currentModeScores
-                )
+            perf.measure(.network) {
+                networkTick(dt: dt)
+                flushNetPaintOps(dt: dtd)
+                duelBotNetTick(dt: dt)
+                if !isMatchOver {
+                    matchAuthority?.tick(
+                        dt: clockDt,
+                        remaining: timeLeftExact,
+                        orange: grid.orangeCount,
+                        purple: grid.purpleCount,
+                        total: grid.totalCount,
+                        modeScores: currentModeScores
+                    )
+                }
             }
         }
         heroAnimator?.cancelHorizontalRootMotion()
-        updateWeaponEffects(dt: dt)
-        updateGrenadeAim()
-        if isTraining {
-            updateTrainingTargets(dt: dt)
-        } else {
-            updateBots(dt: dt, grid: grid)
+        perf.measure(.weapons) {
+            updateWeaponEffects(dt: dt)
+            updateGrenadeAim()
         }
-        updateProjectiles(dt: dt, grid: grid)
-        updatePlantedBombs(grid: grid)
-        updateCaptureZones(dt: dt)
-        updateCoverage(dt: dtd, grid: grid)
-        updateCamera(dt: dt, target: playerContainer.position, camera: camera)
-        updateSniperLaser()
-        updateAimLock(container: playerContainer)
-        updateNameTagsThrottled(dt: dt, camera: camera)
-        updateCharacterLODThrottled(dt: dt, camera: camera)
+        perf.measure(.bots) {
+            if isTraining {
+                updateTrainingTargets(dt: dt)
+            } else {
+                updateBots(dt: dt, grid: grid)
+            }
+        }
+        perf.measure(.projectiles) {
+            updateProjectiles(dt: dt, grid: grid)
+            updatePlantedBombs(grid: grid)
+        }
+        perf.measure(.scoring) {
+            updateCaptureZones(dt: dt)
+            updateCoverage(dt: dtd, grid: grid)
+        }
+        perf.measure(.camera) {
+            updateCamera(dt: dt, target: playerContainer.position, camera: camera)
+        }
+        perf.measure(.weapons) {
+            updateSniperLaser()
+            updateAimLock(container: playerContainer)
+        }
+        perf.measure(.nameTags) {
+            updateNameTagsThrottled(dt: dt, camera: camera)
+        }
+        perf.measure(.lod) {
+            updateCharacterLODThrottled(dt: dt, camera: camera)
+        }
 
         // Merge tiles painted since the last flush into their chunk meshes,
         // throttled by the active quality preset's `paintRebuildInterval` so
         // a continuous jet doesn't force a mesh rebuild every single frame
         // (ownership + coverage already updated instantly when painted, only
         // this visual merge is paced).
-        if grid.usesTexturePaint {
-            // Texture paint: no mesh is ever rebuilt. Only the rectangle of the
-            // ink image touched since the last tick goes to the GPU — a cost
-            // that stays flat from 0% to 100% coverage.
-            grid.flushCanvas(dt: dt)
-        } else {
-            paintFlushAccum += dt
-            if paintFlushAccum >= qualitySettings.paintRebuildInterval {
-                paintFlushAccum = 0
-                grid.flushPaintBatches(maxRebuilds: qualitySettings.maxChunkRebuildsPerFlush)
+        perf.measure(.paint) {
+            if grid.usesTexturePaint {
+                // Texture paint: no mesh is ever rebuilt. Only the rectangle of
+                // the ink image touched since the last tick goes to the GPU — a
+                // cost that stays flat from 0% to 100% coverage.
+                grid.flushCanvas(dt: dt)
+            } else {
+                paintFlushAccum += dt
+                if paintFlushAccum >= qualitySettings.paintRebuildInterval {
+                    paintFlushAccum = 0
+                    grid.flushPaintBatches(maxRebuilds: qualitySettings.maxChunkRebuildsPerFlush)
+                }
             }
         }
+        perf.noteCounts(
+            projectiles: projectiles.count,
+            bots: bots.count,
+            vfx: liveTransientVFX,
+            paintTiles: grid.paintedTileCount,
+            uploads: grid.canvasUploadCount,
+            stamps: grid.canvas.stampCount
+        )
         refreshPaintPerfDebug(grid: grid)
+    }
+
+    /// Opens a performance trace on the first live frame when the player armed
+    /// the recorder in Settings. Snapshotting the context here (rather than at
+    /// setup) guarantees the preset recorded is the one actually in force,
+    /// including any auto-downgrade already applied.
+    private func startPerfRecordingIfArmed() {
+        let recorder = PerfRecorder.shared
+        guard !recorder.isRecording, ProfileStore.shared.perfRecorderEnabled else { return }
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        recorder.start(context: PerfRunContext(
+            device: PerfSampler.deviceModelIdentifier(),
+            systemVersion: UIDevice.current.systemVersion,
+            appVersion: "\(version) (\(build))",
+            quality: activeQuality.rawValue,
+            autoQuality: ProfileStore.shared.autoGraphicsQuality,
+            targetFPS: ProfileStore.shared.targetFPS,
+            displayMaxFPS: displayMaxFPS,
+            map: ProfileStore.shared.selectedMap.displayName,
+            mode: matchMode.displayName,
+            weapon: weapon.displayName,
+            texturePaint: grid?.usesTexturePaint ?? false,
+            botCount: bots.count,
+            isLocalDuel: isLocalDuel,
+            isTraining: isTraining
+        ))
     }
 
     /// Tracks sustained frame time; if the game runs under 45 FPS for more

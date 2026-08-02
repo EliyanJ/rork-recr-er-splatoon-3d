@@ -44,6 +44,11 @@ struct SettingsScreen: View {
     @State private var autoQuality = ProfileStore.shared.autoGraphicsQuality
     @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
     @State private var perfOverlay = ProfileStore.shared.perfOverlayEnabled
+    @State private var perfRecorder = ProfileStore.shared.perfRecorderEnabled
+    @State private var showPerfReport = false
+    @State private var recorder = PerfRecorder.shared
+
+    private var hasReport: Bool { recorder.lastReport != nil }
     @State private var fps = ProfileStore.shared.targetFPS
     @State private var showResetConfirm = false
     @State private var didResetHUD = false
@@ -99,6 +104,9 @@ struct SettingsScreen: View {
             }
         } message: {
             Text("Les boutons de jeu (viseur, tir, saut...) reprendront leur position par défaut à la prochaine partie.")
+        }
+        .fullScreenCover(isPresented: $showPerfReport) {
+            PerfReportView { showPerfReport = false }
         }
     }
 
@@ -359,6 +367,43 @@ struct SettingsScreen: View {
                     ProfileStore.shared.perfOverlayEnabled = newValue
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
+
+                Divider().background(.white.opacity(0.1))
+
+                Toggle(isOn: $perfRecorder) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("ENREGISTREUR DE PERFORMANCES")
+                            .font(.system(size: 10.5 * scale, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Mesure pendant toute la partie le temps de chaque image et le coût de chaque système (peinture, bots, projectiles, VFX, rendu). Un rapport copiable est écrit à la fin du match.")
+                            .font(.system(size: 9 * scale, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                }
+                .tint(.menuAccent)
+                .onChange(of: perfRecorder) { _, newValue in
+                    ProfileStore.shared.perfRecorderEnabled = newValue
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+
+                Button {
+                    showPerfReport = true
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                } label: {
+                    HStack(spacing: 7) {
+                        Image(systemName: "chart.bar.doc.horizontal.fill")
+                            .font(.system(size: 12 * scale, weight: .bold))
+                        Text(hasReport ? "VOIR LE DERNIER RAPPORT" : "AUCUN RAPPORT POUR L'INSTANT")
+                            .font(.system(size: 11.5 * scale, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(hasReport ? Color.menuAccent.opacity(0.85) : Color.white.opacity(0.1)))
+                }
+                .buttonStyle(PressableStyle())
             }
         }
     }

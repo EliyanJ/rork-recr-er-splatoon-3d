@@ -179,6 +179,13 @@ final class ProfileStore {
         didSet { defaults.set(perfOverlayEnabled, forKey: Keys.perfOverlay) }
     }
 
+    /// Arms the full performance trace: the next match records per-frame and
+    /// per-subsystem timings, then writes a copyable report. Off by default —
+    /// it costs one timestamp pair per subsystem call while a match runs.
+    var perfRecorderEnabled: Bool {
+        didSet { defaults.set(perfRecorderEnabled, forKey: Keys.perfRecorder) }
+    }
+
     /// Paint rendering path used from the next match on: the ink texture
     /// (one quad, constant cost) when true, the historical merged splat
     /// meshes when false. Exposed so a device where the textured path
@@ -259,6 +266,7 @@ final class ProfileStore {
         static let texturePaint = "profile.texturePaint"
         static let paintDebugOverlay = "profile.paintDebugOverlay"
         static let perfOverlay = "profile.perfOverlay"
+        static let perfRecorder = "profile.perfRecorder"
         static let targetFPS = "profile.targetFPS"
         static let trophies = "profile.trophies"
         static let coins = "profile.coins"
@@ -302,6 +310,7 @@ final class ProfileStore {
         texturePaintEnabled = defaults.object(forKey: Keys.texturePaint) as? Bool ?? true
         paintDebugOverlay = defaults.object(forKey: Keys.paintDebugOverlay) as? Bool ?? false
         perfOverlayEnabled = defaults.object(forKey: Keys.perfOverlay) as? Bool ?? false
+        perfRecorderEnabled = defaults.object(forKey: Keys.perfRecorder) as? Bool ?? false
         let storedFPS = defaults.integer(forKey: Keys.targetFPS)
         targetFPS = [30, 60, 120].contains(storedFPS) ? storedFPS : 60
         trophies = defaults.integer(forKey: Keys.trophies)

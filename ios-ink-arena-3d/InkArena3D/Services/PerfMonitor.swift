@@ -50,6 +50,20 @@ nonisolated enum PerfSampler {
         return total
     }
 
+    /// Raw hardware model identifier (e.g. "iPhone15,4") — the only reliable
+    /// way to know which phone produced a report.
+    static func deviceModelIdentifier() -> String {
+        if let simulated = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] {
+            return "\(simulated) (simulateur)"
+        }
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machine = withUnsafeBytes(of: &systemInfo.machine) { raw -> String in
+            String(decoding: raw.prefix { $0 != 0 }, as: UTF8.self)
+        }
+        return machine.isEmpty ? "inconnu" : machine
+    }
+
     /// Physical footprint in MB — matches Xcode's memory gauge, unlike
     /// resident size which overcounts shared pages.
     static func memoryFootprintMB() -> Int {
