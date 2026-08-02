@@ -160,6 +160,15 @@ final class PaintGrid {
     // per-fragment lighting evaluation on the (often huge) merged paint mesh.
     private var orangeMaterial: UnlitMaterial
     private var purpleMaterial: UnlitMaterial
+
+    // MARK: Texture-based paint (step 1 — buffer only, not displayed yet)
+    /// Top-down RGBA image of the arena's ink, written alongside the mesh
+    /// splats. It costs the same per shot whatever the coverage, whereas the
+    /// merged chunk meshes get heavier as the match fills up. Nothing samples
+    /// it yet: this step only proves the writes are correct and free.
+    let canvas: PaintCanvas
+    private let orangeInk: SIMD4<UInt8>
+    private let purpleInk: SIMD4<UInt8>
     private let heightAt: (Float, Float) -> Float
     /// Declared surface (fixed plane + bounds) plating the tile at (x, z), or
     /// nil for open floor. Drives the splat's fixed orientation and edge clip.
@@ -237,6 +246,12 @@ final class PaintGrid {
         owners = Array(repeating: nil, count: cols * rows)
         instances = Array(repeating: nil, count: cols * rows)
         blockedTiles = Array(repeating: false, count: cols * rows)
+        canvas = PaintCanvas(
+            arenaWidth: GameConfig.arenaWidth,
+            arenaDepth: GameConfig.arenaDepth
+        )
+        orangeInk = PaintGrid.inkBytes(Team.orange.uiColor)
+        purpleInk = PaintGrid.inkBytes(Team.purple.uiColor)
         chunkCols = (cols + chunkSize - 1) / chunkSize
         chunkRows = (rows + chunkSize - 1) / chunkSize
         chunkEntities = Array(repeating: nil, count: chunkCols * chunkRows * 2)
@@ -268,6 +283,24 @@ final class PaintGrid {
         purpleMaterial = UnlitMaterial(color: Team.purple.uiColor)
         orangeMaterial.faceCulling = .back
         purpleMaterial.faceCulling = .back
+    }
+
+    /// Straight RGBA bytes of a team color, for direct writes into the canvas.
+    private static func inkBytes(_ color: UIColor) -> SIMD4<UInt8> {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        func byte(_ v: CGFloat) -> UInt8 { UInt8(max(0, min(255, (v * 255).rounded()))) }
+        return SIMD4<UInt8>(byte(r), byte(g), byte(b), 255)
+    }
+
+    /// Whether the tile covering a world point can never take paint.
+    /// Out-of-arena reads count as blocked so the canvas never bleeds past
+    /// the playable footprint.
+    private func isBlockedWorld(x: Float, z: Float) -> Bool {
+        let col = Int((x + GameConfig.arenaWidth / 2) / GameConfig.tileSize)
+        let row = Int((z + GameConfig.arenaDepth / 2) / GameConfig.tileSize)
+        guard col >= 0, col < cols, row >= 0, row < rows else { return true }
+        return blockedTiles[row * cols + col]
     }
 
     /// Builds a star/splash-shaped FLAT decal: a closed ring of points whose
@@ -343,6 +376,18 @@ final class PaintGrid {
         let minRow = max(0, Int((z - radius + halfD) / GameConfig.tileSize))
         let maxRow = min(rows - 1, Int((z + radius + halfD) / GameConfig.tileSize))
         guard minCol <= maxCol, minRow <= maxRow else { return 0 }
+
+        // Visual-only, runs in parallel with the mesh path for now. Written on
+        // every call (not only when tiles are gained) so re-inking already-held
+        // ground still refreshes the image, exactly like the splats do.
+        canvas.stamp(
+            atX: x,
+            z: z,
+            radius: radius,
+            color: team == .orange ? orangeInk : purpleInk
+        ) { worldX, worldZ in
+            isBlockedWorld(x: worldX, z: worldZ)
+        }
 
         var gained = 0
         for row in minRow...maxRow {
