@@ -311,11 +311,19 @@ final class PaintGrid {
         canvasSurface?.uploadIfNeeded(dt: dt)
     }
 
-    /// Straight RGBA bytes of a team color, for direct writes into the canvas.
+    /// RGBA bytes of a team color for direct writes into the canvas.
+    ///
+    /// Stored LINEAR, not sRGB: the canvas texture uses a linear pixel format
+    /// (`PaintCanvasSurface.pixelFormat`), so the renderer takes the bytes as
+    /// they are. Writing the raw sRGB components would show the ink washed
+    /// out and too bright next to the projectiles using the same color.
     private static func inkBytes(_ color: UIColor) -> SIMD4<UInt8> {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         color.getRed(&r, green: &g, blue: &b, alpha: &a)
-        func byte(_ v: CGFloat) -> UInt8 { UInt8(max(0, min(255, (v * 255).rounded()))) }
+        func byte(_ v: CGFloat) -> UInt8 {
+            let linear = v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
+            return UInt8(max(0, min(255, (linear * 255).rounded())))
+        }
         return SIMD4<UInt8>(byte(r), byte(g), byte(b), 255)
     }
 

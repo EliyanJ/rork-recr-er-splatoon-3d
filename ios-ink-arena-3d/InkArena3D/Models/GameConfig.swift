@@ -23,9 +23,12 @@ enum GameConfig {
     ///
     /// The mesh path's cost grew with coverage — every splat enlarged the chunk
     /// mesh that had to be regenerated, so matches started smooth and ended
-    /// stuttering. Writing pixels costs the same at 2% and at 98%. Flip to
-    /// `false` to fall back to the (still present) geometry path.
-    static let texturePaint = true
+    /// stuttering. Writing pixels costs the same at 2% and at 98%.
+    ///
+    /// Player-switchable (Réglages → Affichage) so the geometry path — still
+    /// present and untouched — can be restored without a new build.
+    @MainActor
+    static var texturePaint: Bool { ProfileStore.shared.texturePaintEnabled }
 
     /// Arena selected for the next match — set from the loadout screen
     /// BEFORE the GameController is created, so every dimension-derived

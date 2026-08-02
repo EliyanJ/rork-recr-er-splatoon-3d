@@ -732,6 +732,7 @@ struct SettingsOverlay: View {
     @State private var sfx = ProfileStore.shared.sfxVolume
     @State private var quality = ProfileStore.shared.graphicsQuality
     @State private var autoQuality = ProfileStore.shared.autoGraphicsQuality
+    @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
     @State private var fps = ProfileStore.shared.targetFPS
     @State private var sensitivity = ProfileStore.shared.cameraSensitivity
     /// Guards against an accidental tap ending the match.
@@ -897,6 +898,22 @@ struct SettingsOverlay: View {
                     Text(quality.subtitle)
                         .font(.system(size: 9, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.4))
+
+                    Toggle(isOn: $texturePaint) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("PEINTURE TEXTURÉE")
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("S'applique à la partie suivante. À couper si l'encre ne s'affiche pas.")
+                                .font(.system(size: 9, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.45))
+                        }
+                    }
+                    .tint(Team.orange.color)
+                    .onChange(of: texturePaint) { _, newValue in
+                        ProfileStore.shared.texturePaintEnabled = newValue
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
                 }
 
                 if let controller {

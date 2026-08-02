@@ -42,6 +42,7 @@ struct SettingsScreen: View {
     @State private var sensitivity = ProfileStore.shared.cameraSensitivity
     @State private var quality = ProfileStore.shared.graphicsQuality
     @State private var autoQuality = ProfileStore.shared.autoGraphicsQuality
+    @State private var texturePaint = ProfileStore.shared.texturePaintEnabled
     @State private var fps = ProfileStore.shared.targetFPS
     @State private var showResetConfirm = false
     @State private var didResetHUD = false
@@ -325,6 +326,22 @@ struct SettingsScreen: View {
                 Text(quality.subtitle)
                     .font(.system(size: 9 * scale, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.4))
+
+                Toggle(isOn: $texturePaint) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("PEINTURE TEXTURÉE")
+                            .font(.system(size: 10.5 * scale, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Encre dessinée en une seule couche: coût identique du début à la fin du match. À couper si l'encre ne s'affiche pas.")
+                            .font(.system(size: 9 * scale, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                }
+                .tint(.menuAccent)
+                .onChange(of: texturePaint) { _, newValue in
+                    ProfileStore.shared.texturePaintEnabled = newValue
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
             }
         }
     }

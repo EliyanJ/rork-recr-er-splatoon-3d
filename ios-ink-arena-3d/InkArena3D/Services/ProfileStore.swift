@@ -166,6 +166,14 @@ final class ProfileStore {
         didSet { defaults.set(autoGraphicsQuality, forKey: Keys.autoGraphicsQuality) }
     }
 
+    /// Paint rendering path used from the next match on: the ink texture
+    /// (one quad, constant cost) when true, the historical merged splat
+    /// meshes when false. Exposed so a device where the textured path
+    /// misbehaves can fall back without waiting for an update.
+    var texturePaintEnabled: Bool {
+        didSet { defaults.set(texturePaintEnabled, forKey: Keys.texturePaint) }
+    }
+
     /// The preset actually applied at the next match: the detected
     /// recommendation while auto is on, otherwise the manual choice.
     var effectiveGraphicsQuality: GraphicsQuality {
@@ -235,6 +243,7 @@ final class ProfileStore {
         static let sfxVolume = "profile.sfxVolume"
         static let graphicsQuality = "profile.graphicsQuality"
         static let autoGraphicsQuality = "profile.autoGraphicsQuality"
+        static let texturePaint = "profile.texturePaint"
         static let targetFPS = "profile.targetFPS"
         static let trophies = "profile.trophies"
         static let coins = "profile.coins"
@@ -275,6 +284,7 @@ final class ProfileStore {
             graphicsQuality = DevicePerformance.recommendedQuality
         }
         autoGraphicsQuality = defaults.object(forKey: Keys.autoGraphicsQuality) as? Bool ?? true
+        texturePaintEnabled = defaults.object(forKey: Keys.texturePaint) as? Bool ?? true
         let storedFPS = defaults.integer(forKey: Keys.targetFPS)
         targetFPS = [30, 60, 120].contains(storedFPS) ? storedFPS : 60
         trophies = defaults.integer(forKey: Keys.trophies)
