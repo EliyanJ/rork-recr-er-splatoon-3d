@@ -311,8 +311,9 @@ extension GameController {
             netPaintSplat(x: pos.x, z: pos.z, radius: GameConfig.grenadePaintRadius, team: team)
         }
         spawnBurst(at: pos, team: team)
-        // Spatial audio: the blast is loud up close and fades with distance.
-        AudioService.shared.playEnemySplat(volume: spatialVolume(1.0, at: pos))
+        // Spatial audio: dull, muffled thud — distinct from the sharper
+        // generic splash — loud up close and fading with distance.
+        AudioService.shared.playGrenadeExplosion(volume: spatialVolume(1.0, at: pos))
         if let playerPos = playerContainer?.position, simd_distance(playerPos, pos) < 12 {
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         }

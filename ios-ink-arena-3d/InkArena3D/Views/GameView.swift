@@ -51,7 +51,7 @@ struct GameView: View {
             if showIntro {
                 MatchIntroOverlay(isSceneReady: controller.isSceneReady) {
                     controller.beginMatch()
-                    AudioService.shared.playMusic()
+                    AudioService.shared.playMatchMusic(for: GameConfig.currentMap)
                     AudioService.shared.playAmbience()
                     withAnimation(.easeOut(duration: 0.5)) {
                         showIntro = false

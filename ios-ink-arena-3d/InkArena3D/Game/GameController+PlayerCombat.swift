@@ -186,6 +186,24 @@ extension GameController {
                 wasInWater = false
             }
             container.position = pos
+
+            // Footsteps: on foot, grounded, actually moving — muffled swim
+            // sound takes over instead while diving (handled below).
+            if moveDir != .zero, !isAirborne, !isClimbing, !swimmingNow {
+                let cadence = Double(0.42 / max(magnitude, 0.35))
+                if elapsed - lastFootstepTime > cadence {
+                    lastFootstepTime = elapsed
+                    AudioService.shared.playFootstep(volume: 0.22 + 0.1 * min(magnitude, 1))
+                }
+            }
+        }
+
+        // Muffled sponge-swim loop: only while diving AND actually moving —
+        // silent the instant the joystick is released or the jet fires.
+        if isDiving, moveDir != .zero {
+            AudioService.shared.startSpongeMove()
+        } else {
+            AudioService.shared.stopSpongeMove()
         }
 
         // In first person the body always faces the camera direction (true
@@ -314,7 +332,7 @@ extension GameController {
             triggerMuzzleEffects()
             if elapsed - lastJetSfx > 0.14 {
                 lastJetSfx = elapsed
-                AudioService.shared.playSplat(volume: 0.2)
+                AudioService.shared.playWeaponFire(weapon, volume: 0.32)
             }
         } else if !isFiring {
             let regen = (isDiving && standing == localTeam)
@@ -378,7 +396,7 @@ extension GameController {
         )
         sendFire(kind: .bucket, origin: origin, direction: lob)
         weaponRecoil = 0.18
-        AudioService.shared.playSplat(volume: 0.45)
+        AudioService.shared.playWeaponFire(.bucket, volume: 0.6)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
@@ -387,6 +405,7 @@ extension GameController {
     func fireDualPair(origin: SIMD3<Float>, direction: SIMD3<Float>, right: SIMD3<Float>) {
         spawnJetDrop(at: origin, direction: direction, team: localTeam, weapon: .dual)
         sendFire(kind: .jet, origin: origin, direction: direction)
+        AudioService.shared.playWeaponFire(.dual, volume: 0.4)
         let leftOrigin = origin - right * GameConfig.dualOffhandOffset
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(Int(GameConfig.dualStaggerDelay * 1000)))
@@ -452,7 +471,7 @@ extension GameController {
         heroAnimator?.playOnce(ModelCatalog.heroDraw, restoreAfter: .milliseconds(500))
         triggerMuzzleEffects()
         weaponRecoil = 0.12 + charge * 0.1
-        AudioService.shared.playSplat(volume: 0.3 + charge * 0.3)
+        AudioService.shared.playWeaponFire(.charger, volume: 0.5 + charge * 0.4)
         UIImpactFeedbackGenerator(style: charge > 0.7 ? .heavy : .medium).impactOccurred()
     }
 

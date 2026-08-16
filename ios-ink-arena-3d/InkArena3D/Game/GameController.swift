@@ -759,6 +759,8 @@ final class GameController {
     var elapsed: Double = 0
     var lastSplatSfx: Double = 0
     var lastJetSfx: Double = 0
+    /// Throttles the footstep sound while walking/running on foot.
+    @ObservationIgnored var lastFootstepTime: Double = 0
 
     /// The local player's base — left side for orange, right side for the
     /// duel guest (purple). Both devices share ONE world frame: the left
