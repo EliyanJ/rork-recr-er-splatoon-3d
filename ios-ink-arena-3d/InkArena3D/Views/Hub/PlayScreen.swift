@@ -1,12 +1,11 @@
 import SwiftUI
 
-/// Écran "JOUER" — choix du mode de match (Match contre l'IA, Entraînement
-/// et Partie personnalisée actifs, Mode événement à venir) puis les défis
-/// quotidiens en cours. Données factices ; Match contre l'IA lance le même
-/// flux que le bouton JOUER de l'accueil (lobby → IA), Entraînement ouvre la
-/// salle de tir sandbox, et Partie personnalisée ouvre le choix de sous-mode
-/// (Duel local / Partie classique / Match par équipes) avant la connexion
-/// locale entre appareils.
+/// Écran "JOUER" — mosaïque de modes façon borne d'arcade : grandes tuiles
+/// illustrées pour les modes jouables, tuiles grisées avec palier de niveau
+/// pour ceux à venir, et bandeau compact des défis quotidiens en bas.
+/// Match contre l'IA lance le même flux que le bouton JOUER de l'accueil,
+/// Entraînement ouvre la salle de tir, Partie personnalisée ouvre le choix
+/// de sous-mode avant la connexion locale entre appareils.
 struct PlayScreen: View {
     let pigments: Int
     let prisms: Int
@@ -28,7 +27,7 @@ struct PlayScreen: View {
         let subtitle: String
         let tint: Color
         let kind: ModeKind
-        let locked: Bool
+        let unlockLevel: Int
     }
 
     private struct DailyChallenge: Identifiable {
@@ -42,23 +41,39 @@ struct PlayScreen: View {
     }
 
     @State private var showCustomModes = false
+    @State private var meta = MetaStore.shared
+    @State private var appeared = false
 
-    private let modes: [Mode] = [
-        Mode(icon: "bolt.fill", title: "MATCH CONTRE L'IA", subtitle: "Duel 1v1 contre l'IA — lance-toi tout de suite", tint: .menuAccent, kind: .quickMatch, locked: false),
-        Mode(icon: "figure.run", title: "ENTRAÎNEMENT", subtitle: "Mannequins, cibles mobiles, change d'arme librement", tint: Color(hex: "2EE6D6"), kind: .training, locked: false),
-        Mode(icon: "person.3.fill", title: "PARTIE PERSONNALISÉE", subtitle: "Duel local, règles et équipes sur-mesure entre amis", tint: Color(hex: "9A3DF5"), kind: .custom, locked: false),
-        Mode(icon: "trophy.fill", title: "MODE ÉVÉNEMENT", subtitle: "Défi limité dans le temps, récompenses exclusives", tint: Color(hex: "FF6A00"), kind: .event, locked: true),
-    ]
+    private let quickMatch = Mode(
+        icon: "bolt.fill", title: "MATCH CONTRE L'IA",
+        subtitle: "Duel 1v1 — lance-toi tout de suite",
+        tint: Color(hex: "FF7A1A"), kind: .quickMatch, unlockLevel: 0
+    )
+    private let training = Mode(
+        icon: "figure.run", title: "ENTRAÎNEMENT",
+        subtitle: "Mannequins et cibles mobiles",
+        tint: Color(hex: "2EE6D6"), kind: .training, unlockLevel: 0
+    )
+    private let custom = Mode(
+        icon: "person.3.fill", title: "PARTIE PERSONNALISÉE",
+        subtitle: "Duel local entre amis",
+        tint: Color(hex: "9A3DF5"), kind: .custom, unlockLevel: 0
+    )
+    private let event = Mode(
+        icon: "trophy.fill", title: "MODE ÉVÉNEMENT",
+        subtitle: "Défi limité, récompenses exclusives",
+        tint: Color(hex: "F5C518"), kind: .event, unlockLevel: 8
+    )
 
     private let dailyChallenges: [DailyChallenge] = [
-        DailyChallenge(icon: "paintpalette.fill", title: "Peins 3 000 m² d'encre", progress: 0.7, current: 2100, goal: 3000, reward: "+150 🎨"),
-        DailyChallenge(icon: "target", title: "Élimine 8 rivaux", progress: 0.375, current: 3, goal: 8, reward: "+80 🎨"),
-        DailyChallenge(icon: "flag.checkered", title: "Termine 2 matchs", progress: 0.5, current: 1, goal: 2, reward: "+40 💎"),
+        DailyChallenge(icon: "paintpalette.fill", title: "Peindre 3 000 m²", progress: 0.7, current: 2100, goal: 3000, reward: "+150"),
+        DailyChallenge(icon: "target", title: "Éliminer 8 rivaux", progress: 0.375, current: 3, goal: 8, reward: "+80"),
+        DailyChallenge(icon: "flag.checkered", title: "Finir 2 matchs", progress: 0.5, current: 1, goal: 2, reward: "+40"),
     ]
 
     var body: some View {
         MenuScreenScaffold(
-            title: "JOUER",
+            title: "MODES DE JEU",
             activeTab: .play,
             pigments: pigments,
             prisms: prisms,
@@ -66,26 +81,39 @@ struct PlayScreen: View {
             onSelectTab: onSelectTab,
             onSettings: onSettings
         ) { scale in
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 12 * scale) {
-                    VStack(spacing: 9 * scale) {
-                        ForEach(Array(modes.enumerated()), id: \.element.id) { index, mode in
-                            modeCard(mode, scale: scale, index: index)
-                        }
-                    }
-
-                    Text("DÉFIS QUOTIDIENS")
-                        .font(.system(size: 11 * scale, weight: .black, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .padding(.top, 4)
+            VStack(spacing: 8 * scale) {
+                // Mosaïque de modes.
+                HStack(spacing: 8 * scale) {
+                    modeTile(quickMatch, scale: scale, isHero: true)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     VStack(spacing: 8 * scale) {
-                        ForEach(dailyChallenges) { challenge in
-                            challengeRow(challenge, scale: scale)
-                        }
+                        modeTile(training, scale: scale, isHero: false)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        modeTile(custom, scale: scale, isHero: false)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    VStack(spacing: 8 * scale) {
+                        modeTile(event, scale: scale, isHero: false)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        lockedPlaceholder(title: "CLASSÉE", level: 12, scale: scale)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .frame(maxHeight: .infinity)
+
+                // Défis quotidiens compacts.
+                HStack(spacing: 7 * scale) {
+                    ForEach(dailyChallenges) { challenge in
+                        challengePill(challenge, scale: scale)
                     }
                 }
-                .padding(.bottom, 4)
+            }
+            .onAppear {
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) { appeared = true }
             }
         }
         .fullScreenCover(isPresented: $showCustomModes) {
@@ -99,97 +127,139 @@ struct PlayScreen: View {
         }
     }
 
-    private func modeCard(_ mode: Mode, scale: CGFloat, index: Int) -> some View {
-        Button {
-            guard !mode.locked else { return }
+    // MARK: - Tuile de mode
+
+    private func modeTile(_ mode: Mode, scale: CGFloat, isHero: Bool) -> some View {
+        let locked = meta.accountLevel < mode.unlockLevel
+        return Button {
+            guard !locked else { return }
             switch mode.kind {
             case .quickMatch: onPlay()
             case .training: onTraining()
             case .custom: showCustomModes = true
             case .event: break
             }
-            UIImpactFeedbackGenerator(style: index == 0 ? .medium : .light).impactOccurred()
+            UIImpactFeedbackGenerator(style: isHero ? .medium : .light).impactOccurred()
         } label: {
-            HStack(spacing: 12 * scale) {
-                Image(systemName: mode.icon)
-                    .font(.system(size: 20 * scale, weight: .black))
-                    .foregroundStyle(mode.locked ? .white.opacity(0.35) : mode.tint)
-                    .frame(width: 40 * scale)
+            ZStack {
+                ArcadeTileBackground(tint: mode.tint, isLocked: locked)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(mode.title)
-                            .font(.system(size: 13 * scale, weight: .black, design: .rounded))
-                            .foregroundStyle(mode.locked ? .white.opacity(0.4) : .white)
-                        if mode.locked {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 9 * scale, weight: .black))
-                                .foregroundStyle(.white.opacity(0.35))
-                        }
-                    }
-                    Text(mode.locked ? "Bientôt disponible" : mode.subtitle)
-                        .font(.system(size: 9.5 * scale, weight: .bold, design: .rounded))
+                // Éclaboussure d'encre décorative en fond de tuile.
+                Image(systemName: mode.icon)
+                    .font(.system(size: (isHero ? 92 : 54) * scale, weight: .black))
+                    .foregroundStyle(mode.tint.opacity(locked ? 0.05 : 0.16))
+                    .rotationEffect(.degrees(-12))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .offset(x: 14 * scale, y: 10 * scale)
+                    .clipped()
+
+                VStack(alignment: .leading, spacing: 3 * scale) {
+                    Image(systemName: mode.icon)
+                        .font(.system(size: (isHero ? 26 : 18) * scale, weight: .black))
+                        .foregroundStyle(locked ? .white.opacity(0.3) : mode.tint)
+                        .shadow(color: locked ? .clear : mode.tint.opacity(0.7), radius: 8)
+
+                    Spacer(minLength: 0)
+
+                    Text(mode.title)
+                        .font(.system(size: (isHero ? 15 : 11) * scale, weight: .black, design: .rounded))
+                        .foregroundStyle(locked ? .white.opacity(0.45) : .white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.6)
+                        .multilineTextAlignment(.leading)
+
+                    Text(locked ? "Bientôt disponible" : mode.subtitle)
+                        .font(.system(size: (isHero ? 10 : 8.5) * scale, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white.opacity(0.55))
                         .lineLimit(2)
-                        .minimumScaleFactor(0.85)
-                }
-                Spacer(minLength: 0)
-                if !mode.locked {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12 * scale, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.4))
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12 * scale)
-            .frame(maxWidth: .infinity)
-            .background(PaintedPanel(skew: index.isMultiple(of: 2) ? 4 : -4).fill(Color.menuPanel.opacity(mode.locked ? 0.55 : 0.88)))
-            .overlay(PaintedPanel(skew: index.isMultiple(of: 2) ? 4 : -4).stroke(mode.locked ? .white.opacity(0.08) : mode.tint.opacity(0.5), lineWidth: 1.5))
-            .opacity(mode.locked ? 0.75 : 1)
-        }
-        .buttonStyle(PressableStyle())
-        .disabled(mode.locked)
-    }
+                        .minimumScaleFactor(0.7)
+                        .multilineTextAlignment(.leading)
 
-    private func challengeRow(_ challenge: DailyChallenge, scale: CGFloat) -> some View {
-        HStack(spacing: 10 * scale) {
-            Image(systemName: challenge.icon)
-                .font(.system(size: 13 * scale, weight: .bold))
-                .foregroundStyle(.menuAccent)
-                .frame(width: 26 * scale, height: 26 * scale)
-                .background(Circle().fill(.white.opacity(0.08)))
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(challenge.title)
-                        .font(.system(size: 11 * scale, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                    Spacer(minLength: 4)
-                    Text(challenge.reward)
-                        .font(.system(size: 10 * scale, weight: .black, design: .rounded))
-                        .foregroundStyle(.menuAccent)
-                }
-                ZStack(alignment: .leading) {
-                    Capsule().fill(.white.opacity(0.15))
-                    GeometryReader { proxy in
-                        Capsule()
-                            .fill(Color(hex: "35C46A"))
-                            .frame(width: proxy.size.width * challenge.progress)
+                    if !locked {
+                        HStack(spacing: 4) {
+                            Text("JOUER")
+                                .font(.system(size: (isHero ? 10 : 8.5) * scale, weight: .black, design: .rounded))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: (isHero ? 9 : 7.5) * scale, weight: .black))
+                        }
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 9 * scale)
+                        .padding(.vertical, 4 * scale)
+                        .background(Capsule().fill(Color.menuAccent))
+                        .padding(.top, 2 * scale)
                     }
                 }
-                .frame(height: 6 * scale)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(10 * scale)
+
+                if locked {
+                    ArcadeLockOverlay(requirement: "Niv.\(mode.unlockLevel)", scale: scale)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: ArcadeKit.tileCorner))
+            .scaleEffect(appeared ? 1 : 0.92)
+            .opacity(appeared ? 1 : 0)
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(locked)
+    }
+
+    /// Tuile "à venir" purement décorative, pour densifier la mosaïque.
+    private func lockedPlaceholder(title: String, level: Int, scale: CGFloat) -> some View {
+        ZStack {
+            ArcadeTileBackground(tint: .gray, isLocked: true)
+            VStack(spacing: 4 * scale) {
+                Spacer(minLength: 0)
+                Text(title)
+                    .font(.system(size: 11 * scale, weight: .black, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .padding(10 * scale)
+            ArcadeLockOverlay(requirement: "Niv.\(level)", scale: scale)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: ArcadeKit.tileCorner))
+        .scaleEffect(appeared ? 1 : 0.92)
+        .opacity(appeared ? 1 : 0)
+    }
+
+    // MARK: - Défi quotidien compact
+
+    private func challengePill(_ challenge: DailyChallenge, scale: CGFloat) -> some View {
+        HStack(spacing: 7 * scale) {
+            Image(systemName: challenge.icon)
+                .font(.system(size: 11 * scale, weight: .black))
+                .foregroundStyle(.menuAccent)
+                .frame(width: 22 * scale, height: 22 * scale)
+                .background(Circle().fill(.white.opacity(0.1)))
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text(challenge.title)
+                        .font(.system(size: 9 * scale, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
+                    Spacer(minLength: 2)
+                    Text(challenge.reward)
+                        .font(.system(size: 8.5 * scale, weight: .black, design: .rounded))
+                        .foregroundStyle(.menuAccent)
+                        .lineLimit(1)
+                }
+                ArcadeStatBar(value: challenge.progress, tint: ArcadeKit.cash, scale: scale)
                 Text("\(challenge.current) / \(challenge.goal)")
-                    .font(.system(size: 8.5 * scale, weight: .bold, design: .rounded))
+                    .font(.system(size: 7.5 * scale, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.5))
                     .monospacedDigit()
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9 * scale)
-        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.07)))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.1), lineWidth: 1))
+        .padding(.horizontal, 9 * scale)
+        .padding(.vertical, 7 * scale)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 11).fill(.black.opacity(0.45)))
+        .overlay(RoundedRectangle(cornerRadius: 11).stroke(.white.opacity(0.12), lineWidth: 1))
     }
 }
 
@@ -206,14 +276,15 @@ private struct CustomModeScreen: View {
         let icon: String
         let title: String
         let subtitle: String
+        let tint: Color
         let locked: Bool
     }
 
     private let options: [Option] = [
-        Option(icon: "person.2.fill", title: "Duel local", subtitle: "Deux iPhones proches, Wi-Fi/Bluetooth — 1 contre 1", locked: false),
-        Option(icon: "slider.horizontal.3", title: "Partie classique", subtitle: "Règles libres, même connexion locale entre appareils", locked: false),
-        Option(icon: "person.3.fill", title: "Match par équipes personnalisé", subtitle: "Équipes sur-mesure entre amis, connexion locale", locked: false),
-        Option(icon: "trophy.fill", title: "Classée", subtitle: "Bientôt disponible", locked: true),
+        Option(icon: "person.2.fill", title: "Duel local", subtitle: "Deux iPhones proches — 1 contre 1", tint: Color(hex: "2EE6D6"), locked: false),
+        Option(icon: "slider.horizontal.3", title: "Partie classique", subtitle: "Règles libres, connexion locale", tint: Color(hex: "FF7A1A"), locked: false),
+        Option(icon: "person.3.fill", title: "Match par équipes", subtitle: "Équipes sur-mesure entre amis", tint: Color(hex: "9A3DF5"), locked: false),
+        Option(icon: "trophy.fill", title: "Classée", subtitle: "Bientôt disponible", tint: Color(hex: "F5C518"), locked: true),
     ]
 
     @State private var showLockedNotice = false
@@ -237,16 +308,18 @@ private struct CustomModeScreen: View {
                         prisms: meta.prisms
                     )
 
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 10 * scale) {
-                            ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
-                                optionCard(option, scale: scale, index: index)
-                            }
+                    HStack(spacing: 8 * scale) {
+                        ForEach(options) { option in
+                            optionTile(option, scale: scale)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
-                        .padding(.bottom, 4)
                     }
+                    .frame(maxHeight: .infinity)
 
-                    Spacer(minLength: 0)
+                    ArcadeInfoBar(
+                        text: "Les parties personnalisées se jouent entre appareils proches, en Wi-Fi ou Bluetooth.",
+                        scale: scale
+                    )
                 }
                 .padding(menuBaseMargin)
             }
@@ -258,7 +331,7 @@ private struct CustomModeScreen: View {
         }
     }
 
-    private func optionCard(_ option: Option, scale: CGFloat, index: Int) -> some View {
+    private func optionTile(_ option: Option, scale: CGFloat) -> some View {
         Button {
             guard !option.locked else {
                 showLockedNotice = true
@@ -267,45 +340,46 @@ private struct CustomModeScreen: View {
             onSelect(option.title)
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         } label: {
-            HStack(spacing: 12 * scale) {
-                Image(systemName: option.icon)
-                    .font(.system(size: 20 * scale, weight: .black))
-                    .foregroundStyle(option.locked ? .white.opacity(0.35) : Color(hex: "9A3DF5"))
-                    .frame(width: 40 * scale)
+            ZStack {
+                ArcadeTileBackground(tint: option.tint, isLocked: option.locked)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(option.title.uppercased())
-                            .font(.system(size: 13 * scale, weight: .black, design: .rounded))
-                            .foregroundStyle(option.locked ? .white.opacity(0.4) : .white)
-                        if option.locked {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 9 * scale, weight: .black))
-                                .foregroundStyle(.white.opacity(0.35))
-                        }
-                    }
+                Image(systemName: option.icon)
+                    .font(.system(size: 58 * scale, weight: .black))
+                    .foregroundStyle(option.tint.opacity(option.locked ? 0.05 : 0.15))
+                    .rotationEffect(.degrees(-12))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .offset(x: 12 * scale, y: 8 * scale)
+                    .clipped()
+
+                VStack(alignment: .leading, spacing: 4 * scale) {
+                    Image(systemName: option.icon)
+                        .font(.system(size: 20 * scale, weight: .black))
+                        .foregroundStyle(option.locked ? .white.opacity(0.3) : option.tint)
+                        .shadow(color: option.locked ? .clear : option.tint.opacity(0.7), radius: 8)
+                    Spacer(minLength: 0)
+                    Text(option.title.uppercased())
+                        .font(.system(size: 11.5 * scale, weight: .black, design: .rounded))
+                        .foregroundStyle(option.locked ? .white.opacity(0.45) : .white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.6)
+                        .multilineTextAlignment(.leading)
                     Text(option.subtitle)
-                        .font(.system(size: 9.5 * scale, weight: .bold, design: .rounded))
+                        .font(.system(size: 8.5 * scale, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white.opacity(0.55))
                         .lineLimit(2)
-                        .minimumScaleFactor(0.85)
+                        .minimumScaleFactor(0.7)
+                        .multilineTextAlignment(.leading)
                 }
-                Spacer(minLength: 0)
-                if !option.locked {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12 * scale, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.4))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(10 * scale)
+
+                if option.locked {
+                    ArcadeLockOverlay(requirement: "En ligne", scale: scale)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12 * scale)
-            .frame(maxWidth: .infinity)
-            .background(PaintedPanel(skew: index.isMultiple(of: 2) ? 4 : -4).fill(Color.menuPanel.opacity(option.locked ? 0.55 : 0.88)))
-            .overlay(PaintedPanel(skew: index.isMultiple(of: 2) ? 4 : -4).stroke(option.locked ? .white.opacity(0.08) : Color(hex: "9A3DF5").opacity(0.5), lineWidth: 1.5))
-            .opacity(option.locked ? 0.75 : 1)
+            .clipShape(RoundedRectangle(cornerRadius: ArcadeKit.tileCorner))
         }
         .buttonStyle(PressableStyle())
-        .disabled(option.locked)
     }
 }
 

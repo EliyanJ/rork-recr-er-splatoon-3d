@@ -1,147 +1,266 @@
 import SwiftUI
 
-/// Écran de reveal d'un coffre : le coffre tremble, s'ouvre dans un flash
-/// de particules, puis les récompenses se révèlent une par une avec leur
-/// couleur de rareté. Déclenché depuis l'Accueil ou la fin de partie.
+/// Écran d'ouverture de coffre — montée de tension (le coffre tremble de
+/// plus en plus fort, le halo de rareté s'intensifie), explosion de peinture,
+/// puis révélation des récompenses une par une sous forme de cartes à cadre
+/// de rareté. Mise en page paysage : les cartes se placent côte à côte.
 struct ChestRevealView: View {
     let payload: ChestRevealPayload
     let onDone: () -> Void
 
     @State private var phase: Int = 0
-    @State private var shake = false
+    @State private var shakeAmount: Double = 0
     @State private var burst = false
     @State private var revealedCount = 0
+    @State private var haloPulse = false
+
+    /// Rareté la plus élevée du lot — pilote la couleur de l'ambiance.
+    private var topRarity: Rarity {
+        payload.rewards.map(\.rarity).max() ?? .common
+    }
 
     var body: some View {
-        ZStack {
-            Color(red: 0.05, green: 0.05, blue: 0.14).ignoresSafeArea()
+        GeometryReader { geo in
+            let scale = menuScaleFactor(for: geo.size.height)
+            ZStack {
+                background(scale: scale)
 
-            // Halo de rareté derrière le coffre.
-            Circle()
-                .fill(payload.chest.tint.opacity(burst ? 0.45 : 0.2))
-                .frame(width: 320, height: 320)
-                .blur(radius: 70)
-                .scaleEffect(burst ? 1.3 : 0.9)
-                .animation(.easeOut(duration: 0.5), value: burst)
-
-            // Particules d'ouverture.
-            if burst {
-                ForEach(0..<14, id: \.self) { index in
-                    Circle()
-                        .fill(index % 2 == 0 ? payload.chest.tint : Team.orange.color)
-                        .frame(width: CGFloat.random(in: 6...14))
-                        .offset(
-                            x: cos(Double(index) / 14 * 2 * .pi) * 130,
-                            y: sin(Double(index) / 14 * 2 * .pi) * 130
-                        )
-                        .opacity(0.7)
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
-
-            VStack(spacing: 22) {
                 if phase == 0 {
-                    Image(systemName: "shippingbox.fill")
-                        .font(.system(size: 90, weight: .bold))
-                        .foregroundStyle(payload.chest.tint)
-                        .rotationEffect(.degrees(shake ? 4 : -4))
-                        .animation(.easeInOut(duration: 0.09).repeatForever(autoreverses: true), value: shake)
-                    Text(payload.chest.displayName.uppercased())
-                        .font(.system(size: 20, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text("Ouverture…")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
+                    sealedChest(scale: scale)
                 } else {
-                    Text("VOUS AVEZ OBTENU")
-                        .font(.system(size: 16, weight: .black, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.7))
-
-                    VStack(spacing: 12) {
-                        ForEach(Array(payload.rewards.enumerated()), id: \.element.id) { index, reward in
-                            rewardCard(reward)
-                                .opacity(revealedCount > index ? 1 : 0)
-                                .scaleEffect(revealedCount > index ? 1 : 0.6)
-                                .animation(
-                                    .spring(response: 0.45, dampingFraction: 0.65),
-                                    value: revealedCount
-                                )
-                        }
-                    }
-
-                    if revealedCount >= payload.rewards.count {
-                        Button {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            onDone()
-                        } label: {
-                            Text("CONTINUER")
-                                .font(.system(size: 17, weight: .black, design: .rounded))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 46)
-                                .padding(.vertical, 13)
-                                .background(
-                                    Capsule()
-                                        .fill(Team.orange.color)
-                                        .shadow(color: Team.orange.color.opacity(0.5), radius: 12, y: 4)
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .transition(.opacity)
-                    }
+                    rewardsReveal(scale: scale)
                 }
             }
-            .padding(.horizontal, 30)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: phase)
+        .animation(.spring(response: 0.45, dampingFraction: 0.78), value: phase)
         .onAppear(perform: playSequence)
     }
 
-    private func playSequence() {
-        shake = true
-        Task {
-            try? await Task.sleep(for: .milliseconds(900))
-            burst = true
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            AudioService.shared.playSplat(volume: 0.8)
-            try? await Task.sleep(for: .milliseconds(250))
-            phase = 1
-            for index in 1...payload.rewards.count {
-                try? await Task.sleep(for: .milliseconds(450))
-                revealedCount = index
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    // MARK: - Fond et halo
+
+    private func background(scale: CGFloat) -> some View {
+        ZStack {
+            Color(red: 0.04, green: 0.04, blue: 0.09).ignoresSafeArea()
+
+            // Halo de rareté qui respire puis explose.
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [payload.chest.tint.opacity(burst ? 0.55 : 0.28), .clear],
+                        center: .center,
+                        startRadius: 4,
+                        endRadius: 220 * scale
+                    )
+                )
+                .frame(width: 420 * scale, height: 420 * scale)
+                .scaleEffect(burst ? 1.35 : (haloPulse ? 1.06 : 0.92))
+                .animation(.easeOut(duration: 0.55), value: burst)
+                .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: haloPulse)
+
+            // Rayons de lumière derrière les récompenses.
+            if phase == 1 {
+                ForEach(0..<12, id: \.self) { index in
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [topRarity.color.opacity(0.22), .clear],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 16 * scale, height: 300 * scale)
+                        .offset(y: -60 * scale)
+                        .rotationEffect(.degrees(Double(index) / 12 * 360))
+                }
+                .transition(.opacity)
             }
+
+            // Éclaboussures de peinture projetées à l'ouverture.
+            if burst {
+                ForEach(0..<18, id: \.self) { index in
+                    let angle = Double(index) / 18 * 2 * .pi
+                    let distance = (110.0 + Double(index % 4) * 34) * Double(scale)
+                    Circle()
+                        .fill(index % 3 == 0 ? payload.chest.tint : (index % 3 == 1 ? Team.orange.color : topRarity.color))
+                        .frame(width: CGFloat.random(in: 7...17) * scale)
+                        .offset(x: cos(angle) * distance, y: sin(angle) * distance)
+                        .opacity(phase == 1 ? 0.35 : 0.8)
+                        .blur(radius: phase == 1 ? 2 : 0)
+                        .transition(.scale.combined(with: .opacity))
+                }
+                .animation(.easeOut(duration: 0.7), value: phase)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    // MARK: - Phase 1 : le coffre scellé
+
+    private func sealedChest(scale: CGFloat) -> some View {
+        VStack(spacing: 14 * scale) {
+            ZStack {
+                // Socle lumineux.
+                Ellipse()
+                    .fill(payload.chest.tint.opacity(0.3))
+                    .frame(width: 150 * scale, height: 26 * scale)
+                    .blur(radius: 14)
+                    .offset(y: 58 * scale)
+
+                Image(systemName: "shippingbox.fill")
+                    .font(.system(size: 92 * scale, weight: .black))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [payload.chest.tint, payload.chest.tint.opacity(0.55)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(color: payload.chest.tint.opacity(0.7), radius: 22)
+                    .rotationEffect(.degrees(shakeAmount))
+                    .scaleEffect(burst ? 1.25 : 1)
+                    .opacity(burst ? 0 : 1)
+                    .animation(.easeOut(duration: 0.28), value: burst)
+            }
+            .frame(height: 130 * scale)
+
+            Text(payload.chest.displayName.uppercased())
+                .font(.system(size: 19 * scale, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+                .shadow(color: payload.chest.tint.opacity(0.8), radius: 10)
+
+            Text("Ouverture…")
+                .font(.system(size: 11 * scale, weight: .black, design: .rounded))
+                .foregroundStyle(.white.opacity(0.5))
         }
     }
 
-    private func rewardCard(_ reward: ChestReward) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: reward.iconSystemName)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(reward.rarity.color)
-                .frame(width: 52, height: 52)
-                .background(Circle().fill(reward.rarity.color.opacity(0.15)))
-                .overlay(Circle().stroke(reward.rarity.color.opacity(0.6), lineWidth: 2))
+    // MARK: - Phase 2 : les récompenses
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(reward.displayName)
-                    .font(.system(size: 15, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Text("\(reward.rarity.displayName) · \(reward.subtitle)")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(reward.rarity.color)
-                    .lineLimit(1)
+    private func rewardsReveal(scale: CGFloat) -> some View {
+        VStack(spacing: 14 * scale) {
+            Text("TU AS OBTENU")
+                .font(.system(size: 14 * scale, weight: .black, design: .rounded))
+                .foregroundStyle(.white.opacity(0.75))
+                .tracking(2)
+
+            HStack(spacing: 10 * scale) {
+                ForEach(Array(payload.rewards.enumerated()), id: \.element.id) { index, reward in
+                    rewardCard(reward, scale: scale)
+                        .opacity(revealedCount > index ? 1 : 0)
+                        .scaleEffect(revealedCount > index ? 1 : 0.55)
+                        .rotation3DEffect(
+                            .degrees(revealedCount > index ? 0 : 70),
+                            axis: (x: 0, y: 1, z: 0)
+                        )
+                        .animation(
+                            .spring(response: 0.5, dampingFraction: 0.62),
+                            value: revealedCount
+                        )
+                }
             }
-            Spacer(minLength: 0)
+
+            if revealedCount >= payload.rewards.count {
+                Button {
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    onDone()
+                } label: {
+                    Text("CONTINUER")
+                        .font(.system(size: 15 * scale, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 44 * scale)
+                        .padding(.vertical, 11 * scale)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [ArcadeKit.cash, ArcadeKit.cash.opacity(0.68)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                        )
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.4), lineWidth: 1.5))
+                        .shadow(color: ArcadeKit.cash.opacity(0.5), radius: 12, y: 4)
+                }
+                .buttonStyle(PressableStyle())
+                .transition(.opacity.combined(with: .scale))
+            }
         }
-        .padding(12)
-        .frame(maxWidth: 360)
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.08)))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(reward.rarity.color.opacity(0.45), lineWidth: 1.5)
-        )
+        .padding(.horizontal, 24 * scale)
+    }
+
+    private func rewardCard(_ reward: ChestReward, scale: CGFloat) -> some View {
+        VStack(spacing: 6 * scale) {
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [reward.rarity.color.opacity(0.5), .clear],
+                            center: .center,
+                            startRadius: 2,
+                            endRadius: 38 * scale
+                        )
+                    )
+                Image(systemName: reward.iconSystemName)
+                    .font(.system(size: 30 * scale, weight: .black))
+                    .foregroundStyle(reward.rarity.color)
+                    .shadow(color: reward.rarity.color.opacity(0.8), radius: 10)
+            }
+            .frame(height: 56 * scale)
+
+            Text(reward.displayName)
+                .font(.system(size: 11 * scale, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.65)
+
+            Text(reward.rarity.displayName.uppercased())
+                .font(.system(size: 8.5 * scale, weight: .black, design: .rounded))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 8 * scale)
+                .padding(.vertical, 2.5 * scale)
+                .background(Capsule().fill(reward.rarity.color))
+
+            Text(reward.subtitle)
+                .font(.system(size: 8.5 * scale, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(0.55))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .padding(10 * scale)
+        .frame(width: 132 * scale)
+        .background(ArcadeTileBackground(tint: reward.rarity.color, isSelected: reward.rarity == .legendary))
+    }
+
+    // MARK: - Séquence d'ouverture
+
+    private func playSequence() {
+        haloPulse = true
+        Task {
+            // Tremblement qui s'intensifie.
+            for step in 0..<10 {
+                withAnimation(.easeInOut(duration: 0.07)) {
+                    shakeAmount = (step.isMultiple(of: 2) ? 1 : -1) * (2 + Double(step) * 0.9)
+                }
+                try? await Task.sleep(for: .milliseconds(75))
+            }
+            withAnimation(.easeOut(duration: 0.1)) { shakeAmount = 0 }
+
+            burst = true
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            AudioService.shared.playSplat(volume: 0.85)
+
+            try? await Task.sleep(for: .milliseconds(320))
+            phase = 1
+
+            for index in 1...max(payload.rewards.count, 1) {
+                try? await Task.sleep(for: .milliseconds(420))
+                revealedCount = index
+                UIImpactFeedbackGenerator(style: index == payload.rewards.count ? .medium : .light).impactOccurred()
+            }
+        }
     }
 }
 
